@@ -131,13 +131,17 @@ import { Meta, Title } from '@angular/platform-browser';
       <section class="privacy__section" aria-labelledby="contact-heading">
         <h2 id="contact-heading" class="privacy__section-title">Contact</h2>
         <p>
-          Questions about this policy can be raised via the
+          Questions about this policy:
+          <a href="mailto:contact@nouploadvideo.com">contact@nouploadvideo.com</a>
+        </p>
+        <p>
+          You can also open an issue on
           <a
             href="https://github.com/Joaovvb/NoUploadVideo/issues"
             target="_blank"
             rel="noopener noreferrer"
-          >GitHub issues</a>
-          page for this project.
+          >GitHub</a>
+          for technical feedback about the open-source project.
         </p>
       </section>
 

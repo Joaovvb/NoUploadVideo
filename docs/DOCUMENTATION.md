@@ -756,7 +756,7 @@ Página estática de política de privacidade em `/privacy`.
 | CDN | WASM FFmpeg via unpkg (sem conteúdo do usuário) |
 | Hosting | Cloudflare Pages — dados de conexão padrão |
 | Analytics | Plausible (`AnalyticsService`) — pageviews em produção, sem cookies |
-| Contacto | GitHub Issues do repositório |
+| Contacto | `contact@nouploadvideo.com` (Cloudflare Email Routing) + GitHub Issues |
 
 ---
 
