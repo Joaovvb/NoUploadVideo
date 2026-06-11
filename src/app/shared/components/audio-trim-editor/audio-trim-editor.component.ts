@@ -1,7 +1,6 @@
 import { CommonModule } from '@angular/common';
 import {
   Component,
-  computed,
   DestroyRef,
   effect,
   inject,
@@ -9,19 +8,18 @@ import {
   output,
   signal,
 } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import {
   AudioTrimRange,
   MIN_TRIM_DURATION_SEC,
   isValidTrimRange,
 } from '../../../core/models/audio-trim-range.model';
 import { areTrimRangesEqual } from '../../../core/utils/audio-trim-range.util';
-import { formatTimeLabel } from '../../../core/utils/format-time.util';
+import { AudioWaveformTrimComponent } from '../audio-waveform-trim/audio-waveform-trim.component';
 
 @Component({
   selector: 'app-audio-trim-editor',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, AudioWaveformTrimComponent],
   template: `
     <section class="audio-trim" aria-labelledby="audio-trim-heading">
       <div class="audio-trim__header">
@@ -39,84 +37,19 @@ import { formatTimeLabel } from '../../../core/utils/format-time.util';
 
       @if (trimEnabled()) {
         @if (previewUrl()) {
-          <video
-            #previewVideo
-            class="audio-trim__video"
-            [src]="previewUrl()"
-            controls
-            preload="metadata"
-            (loadedmetadata)="onMetadataLoaded(previewVideo)"
-            (timeupdate)="onTimeUpdate(previewVideo.currentTime)"
-          >
-            Your browser cannot preview this file. You can still set start/end times below.
-          </video>
+          <app-audio-waveform-trim
+            [file]="file()"
+            [mediaUrl]="previewUrl()"
+            [disabled]="disabled()"
+            [durationSec]="durationSec()"
+            [startSec]="startSec()"
+            [endSec]="endSec()"
+            (durationSecChange)="onDurationLoaded($event)"
+            (startSecChange)="onStartChange($event)"
+            (endSecChange)="onEndChange($event)"
+          />
         } @else {
           <p class="audio-trim__hint" role="status">Loading preview…</p>
-        }
-
-        @if (durationSec() > 0) {
-          <p class="audio-trim__duration" aria-live="polite">
-            Duration: {{ formatTime(durationSec()) }}
-            · Selection: {{ formatTime(startSec()) }} – {{ formatTime(endSec()) }}
-            ({{ formatTime(selectionDuration()) }})
-          </p>
-
-          <div class="audio-trim__markers">
-            <button
-              type="button"
-              class="audio-trim__marker-btn"
-              [disabled]="disabled()"
-              (click)="setStartFromPlayhead()"
-            >
-              Set start from playhead
-            </button>
-            <button
-              type="button"
-              class="audio-trim__marker-btn"
-              [disabled]="disabled()"
-              (click)="setEndFromPlayhead()"
-            >
-              Set end from playhead
-            </button>
-          </div>
-
-          <div class="audio-trim__slider-group">
-            <label class="audio-trim__slider-label" for="trim-start">
-              Start ({{ formatTime(startSec()) }})
-            </label>
-            <input
-              id="trim-start"
-              type="range"
-              class="audio-trim__slider"
-              [disabled]="disabled()"
-              [min]="0"
-              [max]="durationSec()"
-              [step]="sliderStep()"
-              [ngModel]="startSec()"
-              (ngModelChange)="onStartChange($event)"
-            />
-          </div>
-
-          <div class="audio-trim__slider-group">
-            <label class="audio-trim__slider-label" for="trim-end">
-              End ({{ formatTime(endSec()) }})
-            </label>
-            <input
-              id="trim-end"
-              type="range"
-              class="audio-trim__slider"
-              [disabled]="disabled()"
-              [min]="0"
-              [max]="durationSec()"
-              [step]="sliderStep()"
-              [ngModel]="endSec()"
-              (ngModelChange)="onEndChange($event)"
-            />
-          </div>
-        } @else if (previewUrl()) {
-          <p class="audio-trim__hint" role="note">
-            Preview duration unavailable — wait for metadata or use the playhead buttons after the video loads.
-          </p>
         }
 
         @if (validationMessage()) {
@@ -141,17 +74,10 @@ export class AudioTrimEditorComponent {
   readonly durationSec = signal(0);
   readonly startSec = signal(0);
   readonly endSec = signal(0);
-  readonly playheadSec = signal(0);
   readonly validationMessage = signal<string | null>(null);
 
   private loadedFile: File | null = null;
-  private metadataApplied = false;
-
-  readonly formatTime = formatTimeLabel;
-
-  readonly selectionDuration = computed(() => Math.max(0, this.endSec() - this.startSec()));
-
-  readonly sliderStep = computed(() => (this.durationSec() > 600 ? 1 : 0.1));
+  private rangeInitialized = false;
 
   constructor() {
     effect(() => {
@@ -166,7 +92,7 @@ export class AudioTrimEditorComponent {
     effect(() => {
       if (!this.trimEnabled()) {
         this.revokePreview();
-        this.metadataApplied = false;
+        this.rangeInitialized = false;
         return;
       }
 
@@ -194,48 +120,30 @@ export class AudioTrimEditorComponent {
     this.emitTrimIfValid();
   }
 
-  onMetadataLoaded(video: HTMLVideoElement): void {
-    if (this.metadataApplied) {
+  onDurationLoaded(duration: number): void {
+    if (!Number.isFinite(duration) || duration <= 0) {
       return;
     }
 
-    this.metadataApplied = true;
-    const duration = Number.isFinite(video.duration) ? video.duration : 0;
+    const previousDuration = this.durationSec();
     this.durationSec.set(duration);
 
+    if (this.rangeInitialized && previousDuration > 0) {
+      this.emitTrimIfValid();
+      return;
+    }
+
+    this.rangeInitialized = true;
     const existing = this.trimRange();
+
     if (existing && isValidTrimRange(existing, duration)) {
       this.startSec.set(existing.startSec);
       this.endSec.set(existing.endSec);
-    } else if (duration > 0) {
+    } else {
       this.startSec.set(0);
       this.endSec.set(duration);
     }
 
-    this.emitTrimIfValid();
-  }
-
-  onTimeUpdate(currentTime: number): void {
-    if (Number.isFinite(currentTime)) {
-      this.playheadSec.set(currentTime);
-    }
-  }
-
-  setStartFromPlayhead(): void {
-    const time = this.playheadSec();
-    const end = this.endSec();
-    const maxStart = Math.max(0, end - MIN_TRIM_DURATION_SEC);
-    this.startSec.set(Math.min(time, maxStart));
-    this.emitTrimIfValid();
-  }
-
-  setEndFromPlayhead(): void {
-    const time = this.playheadSec();
-    const start = this.startSec();
-    const duration = this.durationSec();
-    const minEnd = start + MIN_TRIM_DURATION_SEC;
-    const capped = duration > 0 ? Math.min(time, duration) : time;
-    this.endSec.set(Math.max(capped, minEnd));
     this.emitTrimIfValid();
   }
 
@@ -260,7 +168,7 @@ export class AudioTrimEditorComponent {
 
   private resetForFile(file: File): void {
     this.revokePreview();
-    this.metadataApplied = false;
+    this.rangeInitialized = false;
     this.loadedFile = file;
     this.durationSec.set(0);
     this.validationMessage.set(null);
@@ -282,7 +190,7 @@ export class AudioTrimEditorComponent {
     }
 
     this.revokePreview();
-    this.metadataApplied = false;
+    this.rangeInitialized = false;
     this.loadedFile = file;
     this.previewUrl.set(URL.createObjectURL(file));
   }

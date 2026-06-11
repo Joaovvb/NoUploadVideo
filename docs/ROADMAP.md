@@ -76,6 +76,9 @@ flowchart LR
 | Página `/licenses` | ✅ | FFmpeg LGPL + dependências |
 | Favicon da marca | ✅ | SVG + PNGs |
 | Acessibilidade básica | ✅ | ARIA, HTML semântico |
+| **Trim MP3 (segmento opcional)** | ✅ | Waveform + preview do trecho + FFmpeg `-ss`/`-to` |
+| Editor de waveform | ✅ | `AudioWaveformTrimComponent` — play só da seleção |
+| Fallback sliders (waveform) | ✅ | Se `decodeAudioData` falhar no browser |
 
 ---
 
@@ -171,9 +174,19 @@ Funcionalidades presentes no código mas sem fluxo ativo (ver [DOCUMENTATION.md 
 | Histórico persistente | Só memória (signals) |
 | `ProgressComponent` genérico | Criado, não usado |
 | Status `cancelled` na fila | UI pronta, sem fluxo |
-| Testes unitários amplos | Parcial (`app.component`, `theme.service`) |
+| Testes unitários amplos | Parcial (`app.component`, `theme.service`, `ffmpeg-args`, `audio-waveform.util`) |
+
+### Melhorias futuras — trim / áudio (opcional)
+
+| Item | Prioridade | Notas |
+|------|------------|--------|
+| Waveform em Web Worker | Média | Evitar decode no main thread em arquivos ~100+ MB |
+| Aviso de “gerando waveform…” com cancel | Baixa | UX em arquivos grandes |
+| Rota SEO `video-to-mp3` | Média | Destacar trim na landing |
+| Testes E2E do player de preview | Baixa | Play + handles + convert com trim |
 
 ---
+
 
 ## Próximos passos sugeridos
 
@@ -205,6 +218,9 @@ Funcionalidades presentes no código mas sem fluxo ativo (ver [DOCUMENTATION.md 
 | `3fce50c` | Página `/privacy` |
 | `33fa203` | Plausible analytics (`AnalyticsService`) |
 | `17c8425` | `contact@nouploadvideo.com` na `/privacy` |
+| `6dd0192` | Trim MP3 opcional (MVP com preview) |
+| `1dc9ad5` | Fix freeze ao selecionar MP3 / blob URL |
+| — | Waveform trim (canvas + play do segmento) — ver docs § trim MP3 |
 
 ---
 

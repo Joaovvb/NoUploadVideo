@@ -5,6 +5,7 @@ Conversor de vídeo no navegador com **FFmpeg WebAssembly**. Processamento 100% 
 ## Funcionalidades
 
 - Conversão entre **AVI, MP4, MKV, MOV, WebM** e extração de **MP3**
+- **Trim MP3 opcional** — waveform, preview do trecho selecionado e conversão só do segmento (100% local)
 - Upload por drag & drop (múltiplos arquivos)
 - Fila de conversão com progresso, download individual e **baixar todos em ZIP**
 - Indicador **Baixado** por arquivo após download

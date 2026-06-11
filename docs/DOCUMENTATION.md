@@ -71,6 +71,7 @@ Conversor de vídeo 100% no navegador, sem upload para servidor. Todo o processa
 
 - Upload por **drag & drop** ou clique (múltiplos arquivos)
 - Seletor de formato de saída
+- **Trim de áudio (MP3)** — checkbox “Extract only a segment”, waveform interativa, play do trecho e conversão com `-ss`/`-to` via FFmpeg
 - **Fila de conversão** com barra de progresso, status textual, download individual e **salvar todos** (pasta no Chrome/Edge ou ZIPs em lotes)
 - Indicador **Downloaded** por arquivo após download individual ou em lote
 - Badges informativos: privacidade, multi-thread FFmpeg, WebCodecs
@@ -96,7 +97,10 @@ Conversor de vídeo 100% no navegador, sem upload para servidor. Todo o processa
 | Conversão local (sem upload) | `FfmpegService`, worker | Arquivos nunca saem do browser |
 | Entrada: AVI, MP4, MKV, MOV, WebM, MP3 | `conversion.constants.ts` | Validado em `ConverterComponent` |
 | Saída: MP4, AVI, MKV, MOV, MP3 | `OUTPUT_FORMAT_OPTIONS` | WebM **não** é saída, só entrada |
-| Extração MP3 | `ffmpeg-args.ts` | `-vn -acodec libmp3lame` |
+| Extração MP3 | `ffmpeg-args.ts` | `-vn -acodec libmp3lame -q:a 2` |
+| Trim MP3 (segmento) | `ffmpeg-args.ts`, fila | `-ss` / `-to` quando trim ativo; arquivo inteiro se seleção cobrir ~100% |
+| Preview + waveform (trim) | `AudioWaveformTrimComponent` | Web Audio API + Canvas + `<audio>` blob; 100% local |
+| Editor de trim | `AudioTrimEditorComponent` | Visível só com saída **MP3**; lazy-load do preview |
 | FFmpeg via Web Worker | `ffmpeg.worker.ts` | UI não bloqueia durante encode |
 | Lazy load do engine | `FfmpegService.init()` | WASM carregado na 1ª conversão |
 | Single-thread fallback | `WorkerService` | `.js` em `/ffmpeg/`; WASM via unpkg |
@@ -163,6 +167,24 @@ Conversor de vídeo 100% no navegador, sem upload para servidor. Todo o processa
 | Painel da fila | `ConverterComponent` | Só aparece quando há itens |
 | Cabeçalho opcional | `showHeader` input | Oculto nas landing pages |
 | Resumo de limite | UI | “Máx. 200.0 MB por arquivo” |
+| Editor trim MP3 | `AudioTrimEditorComponent` | Aparece quando formato de saída é `mp3` |
+| Indicador “Segment” na fila | `ConversionQueueComponent` | Quando item tem `trimRange` válido |
+
+#### Trim MP3 (áudio)
+
+| Funcionalidade | Onde | Detalhe |
+|----------------|------|---------|
+| Ativar trim | `AudioTrimEditorComponent` | Checkbox “Extract only a segment” (off por default) |
+| Waveform | `audio-waveform.util.ts` | `AudioContext.decodeAudioData` → ~180 barras normalizadas |
+| Seleção visual | `AudioWaveformTrimComponent` | Handles início/fim na canvas; região destacada |
+| Play do trecho | `AudioWaveformTrimComponent` | `<audio>` oculto (não `display:none`); play só entre `startSec`–`endSec` |
+| Lazy preview | `AudioTrimEditorComponent` | Blob URL só quando trim está ativo (evita loop de effects) |
+| Trim por item na fila | `ConversionQueueItem.trimRange` | `setItemTrim()` no `ConversionQueueService` |
+| Validação | `audio-trim-range.model.ts` | Mín. `0.5s`; seleção ~100% do arquivo = sem trim (null) |
+| Fallback UI | `AudioWaveformTrimComponent` | Sliders se waveform não puder ser gerada |
+| Args FFmpeg | `ffmpeg-args.ts` | `buildTrimArgs()` → `-ss`, `-to` antes do encode MP3 |
+
+**APIs do browser (sem serviços externos):** Web Audio API, HTMLMediaElement, Canvas 2D, `requestAnimationFrame`, Blob URLs.
 
 #### Landing page e shell
 
@@ -345,6 +367,7 @@ NoUploadVideo/
         │   │   ├── ffmpeg-assets.constants.ts
         │   │   └── open-source-licenses.constants.ts
         │   ├── models/
+        │   │   ├── audio-trim-range.model.ts
         │   │   ├── conversion-format.model.ts
         │   │   ├── conversion-queue-item.model.ts
         │   │   ├── ffmpeg-core.model.ts
@@ -356,13 +379,18 @@ NoUploadVideo/
         │   │   ├── webcodecs.service.ts
         │   │   └── worker.service.ts
         │   ├── utils/
+        │   │   ├── audio-trim-range.util.ts
+        │   │   ├── audio-waveform.util.ts
         │   │   ├── ffmpeg-args.ts
+        │   │   ├── format-time.util.ts
         │   │   └── download-filename.util.ts
         │   └── workers/
         │       └── ffmpeg.worker.ts
         ├── shared/
         │   ├── components/
         │   │   ├── ad-slot/
+        │   │   ├── audio-trim-editor/
+        │   │   ├── audio-waveform-trim/
         │   │   ├── conversion-queue/
         │   │   ├── cta-banner/
         │   │   ├── features/
@@ -405,7 +433,7 @@ sequenceDiagram
     U->>C: Clica "Convert"
     C->>Q: processQueue()
     loop Para cada arquivo na fila
-        Q->>F: convert(file, format)
+        Q->>F: convert(file, format, trim?)
         alt WebCodecs elegível (mp4/webm → mp4)
             F->>W: convertToMp4()
             W-->>F: Blob
@@ -426,6 +454,7 @@ sequenceDiagram
 
 1. **Validação** — `ConverterComponent` verifica tamanho (≤ 200 MB) e extensão.
 2. **Enfileiramento** — Arquivos válidos entram na fila com status `queued`.
+2b. **Trim MP3 (opcional)** — Com saída MP3 e checkbox ativo, o usuário define `startSec`/`endSec`; cada item guarda `trimRange` ou `null` se o trecho cobre ~todo o arquivo.
 3. **Processamento sequencial** — Um arquivo por vez (evita estouro de memória).
 4. **Escolha do motor** — `FfmpegService` tenta WebCodecs; se falhar ou não for elegível, usa FFmpeg.
 5. **Worker** — Arquivo é transferido via `postMessage` com `Transferable` (`ArrayBuffer`).
@@ -452,7 +481,7 @@ API de alto nível para conversão.
 ```typescript
 // Métodos principais
 init(): Promise<void>           // Carrega FFmpeg WASM (lazy, uma vez)
-convert(file, outputFormat): Promise<string>  // Retorna Blob URL
+convert(file, outputFormat, trim?): Promise<string>  // Retorna Blob URL; trim opcional (MP3)
 progress$: Observable<{ progress, status }>
 isWebCodecsSupported: boolean
 isMultithreaded: boolean
@@ -552,6 +581,8 @@ Parâmetros H.264 rápidos: `-preset ultrafast -tune zerolatency -crf 28 -pix_fm
 #### Saída MP3
 
 - Extração de áudio: `-vn -acodec libmp3lame -q:a 2`
+- Com trim: `buildTrimArgs(trim)` insere `-ss <startSec>` e `-to <endSec>` antes dos flags de áudio
+- Status no worker: “Extracting audio segment…” quando `trim` está definido
 
 ### 7.6 `ConversionQueueService`
 
@@ -576,6 +607,7 @@ Estado da fila com Angular **signals**.
 |-------|-----------|
 | `outputData` | `Uint8Array` com bytes do arquivo convertido (usado em ZIP/pasta) |
 | `downloaded` | `true` após download individual ou salvamento em lote |
+| `trimRange` | `AudioTrimRange \| null` — janela em segundos para MP3; `null` = arquivo inteiro |
 
 **Status de cada item:**
 
@@ -590,6 +622,7 @@ Estado da fila com Angular **signals**.
 **Métodos públicos:**
 
 - `addFiles(files, outputFormat)`
+- `setItemTrim(id, trimRange)` — atualiza trim de um item da fila
 - `removeItem(id)` — não remove item em processamento
 - `markItemDownloaded(id)` — marca item como baixado
 - `downloadItem(item)` — dispara download e marca como baixado
@@ -616,8 +649,22 @@ Interface mínima para o core WASM: `exec`, `ret`, `reset`, `setProgress`, `FS`.
 #### `ConvertPayload`
 
 ```typescript
-{ fileData: ArrayBuffer; inputExt: string; outputFormat: string }
+{
+  fileData: ArrayBuffer;
+  inputExt: string;
+  outputFormat: string;
+  trim?: AudioTrimRange;  // opcional; usado na extração MP3
+}
 ```
+
+#### `AudioTrimRange`
+
+```typescript
+{ startSec: number; endSec: number }
+```
+
+- `MIN_TRIM_DURATION_SEC = 0.5`
+- `isValidTrimRange(range, mediaDurationSec)` — validação compartilhada entre UI e fila
 
 ### 7.9 `ThemeService`
 
@@ -657,6 +704,25 @@ Gerencia o tema visual claro/escuro com Angular **signals**.
 | `CtaBannerComponent` | `app-cta-banner` | Call-to-action |
 | `AdSlotComponent` | `app-ad-slot` | Placeholder para anúncios (`ADS_ENABLED` em `ads.constants.ts`) |
 | `ThemeToggleComponent` | `app-theme-toggle` | Botão de alternância claro/escuro no header |
+| `AudioTrimEditorComponent` | `app-audio-trim-editor` | Checkbox + orquestra preview/trim por arquivo |
+| `AudioWaveformTrimComponent` | `app-audio-waveform-trim` | Waveform, play/pause do segmento, handles na canvas |
+
+### Trim MP3 — componentes shared
+
+**`AudioTrimEditorComponent`**
+
+- Inputs: `file`, `disabled`, `trimRange`
+- Output: `trimRangeChange` (`AudioTrimRange | null`)
+- Cria blob URL do arquivo **somente** quando o trim está habilitado
+- Repassa `startSec`/`endSec`/`durationSec` ao filho waveform
+
+**`AudioWaveformTrimComponent`**
+
+- Gera peaks via `extractAudioWaveformPeaks(file)` (Web Audio API)
+- Desenha waveform em `<canvas>` com `ResizeObserver`
+- `<audio class="waveform-trim__media">` — elemento visualmente oculto (clip), não `display: none`
+- `effect` com `untracked(isPlaying)` — pausa só quando handles mudam durante reprodução
+- Monitor de fim de trecho via `requestAnimationFrame`
 
 ### Tema claro / escuro (dark mode)
 
@@ -717,8 +783,9 @@ Componente central reutilizado em todas as páginas.
 
 **Responsabilidades:**
 
-- Orquestra upload, fila, seletor de formato e botões
+- Orquestra upload, fila, seletor de formato, **editor de trim MP3** e botões
 - Valida arquivos antes de enfileirar
+- Sincroniza `trimRange` do editor com o item ativo da fila (`setItemTrim`)
 - Dispara `processQueue()` ao clicar em converter
 
 ### Páginas SEO
@@ -1010,6 +1077,9 @@ O campo `time` do callback `setProgress` do FFmpeg indica segundos já processad
 | Sem GPU no WASM | Encode H.264 em CPU via libx264 |
 | Fila sequencial | 22 × 160 MB = muito tempo total |
 | COOP/COEP em produção | Sem headers corretos, cai para single-thread |
+| Waveform (trim MP3) | `decodeAudioData` no main thread; arquivos grandes podem demorar segundos |
+| Preview vs MP3 final | Preview usa `<audio>` no container original; resultado vem do FFmpeg |
+| Waveform em alguns formatos | `decodeAudioData` pode falhar (ex.: codec raro); sliders de fallback |
 
 ### Por que parece "rápido até 12% e depois lento"?
 
@@ -1207,7 +1277,9 @@ Qualquer host de arquivos estáticos funciona (GitHub Pages, Cloudflare Pages, S
 - Specs existentes:
   - `src/app/app.component.spec.ts`
   - `src/app/core/services/theme.service.spec.ts` (toggle, persistência, `data-theme`)
-- Maioria dos componentes/serviços ainda sem specs dedicados
+  - `src/app/core/utils/ffmpeg-args.spec.ts` (args de trim MP3 `-ss`/`-to`)
+  - `src/app/core/utils/audio-waveform.util.spec.ts` (rejeição de dados inválidos)
+- Maioria dos componentes/serviços ainda sem specs dedicados (incl. `AudioWaveformTrimComponent`)
 
 ### Padrão recomendado (conforme regras do projeto)
 
@@ -1235,6 +1307,10 @@ npm test
 | Trava em "Loading FFmpeg engine" | Classe `@ffmpeg/ffmpeg` com blob URLs | Usar `createFFmpegCore` direto (já implementado) |
 | Progresso NaN% | Usar `ratio` em vez de `progress` | Callback usa `{ progress, time }` |
 | Sem badge multi-thread | COOP/COEP ausentes | Configurar headers no servidor |
+| Play do trim não toca | `effect` pausava ao setar `isPlaying` | Corrigido com `untracked(() => isPlaying())` |
+| Página trava ao escolher MP3 | Blob URL recriado em loop no `effect` | Preview lazy + `areTrimRangesEqual` |
+| “Generating waveform…” longo | Arquivo grande em RAM | Normal; melhoria futura: Worker (ver ROADMAP) |
+| Waveform indisponível | `decodeAudioData` falhou | Usar sliders de fallback; conversão FFmpeg segue ok |
 | Conversão muito lenta em AVI | Transcodificação completa necessária | Esperado; estratégias intermediárias ajudam quando possível |
 | Erro de memória | Arquivo muito grande / muitas abas | Reduzir tamanho ou fechar abas |
 | WebCodecs falha silenciosamente | Codec não suportado | Fallback automático para FFmpeg |
@@ -1286,6 +1362,16 @@ Cada conversão carrega o vídeo inteiro na memória WASM. Processar em paralelo
 
 Equilíbrio entre usabilidade e limites práticos de memória do browser para WASM + MEMFS (entrada + saída na RAM).
 
+### Por que Web Audio API para a waveform (e não uma lib)?
+
+- Mantém o princípio **100% local** — sem API de terceiros nem assets externos
+- Peaks são derivados no cliente a partir do mesmo `File` do usuário
+- Trade-off aceito: decode no main thread; Worker é melhoria futura documentada no ROADMAP
+
+### Por que trim só na saída MP3?
+
+MP3 é extração de áudio; o trim temporal (`-ss`/`-to`) é natural nesse fluxo. Estender trim a vídeo exigiria UX e args FFmpeg adicionais.
+
 ---
 
 ## 22. Licenças e open source
@@ -1334,6 +1420,7 @@ Ao adicionar dependência de runtime relevante, atualize `OPEN_SOURCE_DEPENDENCI
 - [@ffmpeg/core npm](https://www.npmjs.com/package/@ffmpeg/core)
 - [Cross-Origin Isolation](https://developer.mozilla.org/en-US/docs/Web/API/crossOriginIsolated)
 - [WebCodecs API](https://developer.mozilla.org/en-US/docs/Web/API/WebCodecs_API)
+- [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API)
 - [Angular Standalone Components](https://angular.dev/guide/components)
 
 ---

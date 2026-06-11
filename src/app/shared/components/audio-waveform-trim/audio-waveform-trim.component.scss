@@ -1,0 +1,113 @@
+.waveform-trim {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.waveform-trim__label {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-muted, #94a3b8);
+}
+
+.waveform-trim__panel {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0.875rem;
+  border-radius: 12px;
+  background: #0b1220;
+  border: 1px solid rgb(255 255 255 / 8%);
+}
+
+.waveform-trim__play {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  color: #f8fafc;
+  background: rgb(255 255 255 / 8%);
+  cursor: pointer;
+}
+
+.waveform-trim__play:hover:not(:disabled) {
+  background: rgb(255 255 255 / 14%);
+}
+
+.waveform-trim__play:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.waveform-trim__play-icon {
+  margin-left: 2px;
+  font-size: 0.75rem;
+  line-height: 1;
+}
+
+.waveform-trim__canvas-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  height: 3.5rem;
+  touch-action: none;
+}
+
+.waveform-trim__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.waveform-trim__loading,
+.waveform-trim__fallback {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--text-muted, #64748b);
+}
+
+.waveform-trim__fallback-sliders {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.waveform-trim__fallback-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-muted, #94a3b8);
+}
+
+.waveform-trim__fallback-slider {
+  width: 100%;
+  accent-color: var(--primary, #6366f1);
+}
+
+.waveform-trim__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  font-size: 0.8125rem;
+  color: var(--text-muted, #64748b);
+}
+
+.waveform-trim__media {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
