@@ -68,7 +68,9 @@ Headers COOP/COEP, segurança (`X-Content-Type-Options`, `Referrer-Policy`) e re
 
 **SEO:** `public/sitemap.xml` + `public/robots.txt` (enviar o sitemap no Google Search Console).
 
-**Analytics:** [Plausible](https://plausible.io) em produção (`analytics.constants.ts` → `nouploadvideo.com`). Crie o site no dashboard Plausible após o deploy.
+**Analytics:** [Plausible](https://plausible.io) em produção (`analytics.constants.ts`). Script específico do site carregado por `AnalyticsService`.
+
+**Contato:** `contact@nouploadvideo.com` (Cloudflare Email Routing).
 
 Arquivos WASM (~31 MiB) excedem o limite de 25 MiB do Cloudflare Pages e são carregados via CDN (unpkg) em runtime. Apenas os `.js` do FFmpeg vão no bundle de deploy.
 

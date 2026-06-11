@@ -52,7 +52,8 @@ flowchart LR
 | Domínio / redirects | ██████████ 100% | `.com`, `www`, `.pages.dev` |
 | SEO (configuração) | ██████████ 100% | Sitemap, robots, Search Console |
 | SEO (resultados) | ██░░░░░░░░ ~20% | Indexação leva dias/semanas |
-| Legal | ████████░░ ~80% | LGPL + Privacy Policy; falta termos de uso |
+| Legal | █████████░ ~90% | LGPL, `/privacy`, `contact@`; falta termos de uso |
+| Métricas | ██████████ 100% | Plausible ativo em produção |
 | Monetização | ░░░░░░░░░░ 0% | AdSense não iniciado |
 | Documentação | ██████████ 100% | DOCUMENTATION, ARCHITECTURE, CONTRIBUTING |
 
@@ -139,16 +140,19 @@ flowchart LR
 |------|--------|---------|
 | Atribuição FFmpeg (LGPL) | ✅ | Footer + `/licenses` |
 | Política de privacidade | ✅ | `/privacy` — inglês, footer + sitemap |
+| E-mail de contato | ✅ | `contact@nouploadvideo.com` (Cloudflare Email Routing → Outlook) |
+| Contato na `/privacy` | ✅ | `contact@nouploadvideo.com` + GitHub Issues |
 | Termos de uso | ⬜ | Opcional, recomendado |
-| Cookie banner | ⬜ | Só se usar GA4 com cookies |
+| Cookie banner | ⬜ | Não necessário com Plausible (sem cookies de tracking) |
 
 ---
 
-## Fase 7 — Métricas e crescimento ⬜
+## Fase 7 — Métricas e crescimento ✅
 
 | Item | Prioridade | Notas |
 |------|------------|--------|
-| Analytics (Plausible) | ✅ | `AnalyticsService` — SPA pageviews em produção |
+| Analytics (Plausible) | ✅ | `AnalyticsService` + script `pa-…` do dashboard; SPA pageviews |
+| Conta Plausible + verificação | ✅ | `nouploadvideo.com` no dashboard; dados em produção |
 | Mais rotas SEO (`webm-to-mp4`, `video-to-mp3`) | Média | Conforme demanda no Search Console |
 | Google AdSense | Baixa | Depois de tráfego + privacidade |
 | PWA / instalar app | Baixa | Nice to have |
@@ -176,10 +180,11 @@ Funcionalidades presentes no código mas sem fluxo ativo (ver [DOCUMENTATION.md 
 ```
 1. [ ] Aguardar indexação no Search Console (passivo)
 2. [ ] (Opcional) Inspeção de URL nas 4 páginas SEO
-3. [ ] Reenviar sitemap no Search Console (após deploy de /privacy)
+3. [ ] Reenviar sitemap no Search Console (se ainda não reenviou após /privacy)
 4. [x] Página de Privacy Policy (`/privacy`)
-5. [x] Analytics leve (Plausible)
-6. [ ] AdSense ou novas rotas SEO conforme dados de tráfego
+5. [x] Analytics (Plausible)
+6. [x] E-mail `contact@nouploadvideo.com`
+7. [ ] AdSense ou novas rotas SEO conforme dados no Plausible / Search Console
 ```
 
 ---
@@ -197,6 +202,9 @@ Funcionalidades presentes no código mas sem fluxo ativo (ver [DOCUMENTATION.md 
 | `b981eac` | Redirect `.pages.dev` + docs domínio |
 | `60b7657` | `sitemap.xml` + `robots.txt` |
 | `3b7992a` | Docs SEO, redirects, Search Console |
+| `3fce50c` | Página `/privacy` |
+| `33fa203` | Plausible analytics (`AnalyticsService`) |
+| `17c8425` | `contact@nouploadvideo.com` na `/privacy` |
 
 ---
 
