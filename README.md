@@ -12,7 +12,11 @@ Conversor de vídeo no navegador com **FFmpeg WebAssembly**. Processamento 100% 
 - **Multi-thread** quando Cross-Origin Isolation está ativo
 - **WebCodecs** como fast path para MP4/WebM → MP4
 - Rotas SEO: `/avi-to-mp4`, `/mkv-to-mp4`, `/mov-to-mp4`
+- Página de licenças: `/licenses` (FFmpeg LGPL + dependências open source)
+- Modo escuro com preferência salva no navegador
 - Limite de **200 MB** por arquivo
+
+**Site em produção:** https://nouploadvideo.pages.dev
 
 ## Stack
 
@@ -57,7 +61,9 @@ Saída: `dist/no-upload-video/browser/`
 
 Headers COOP/COEP e redirect SPA já estão em `public/_headers` e `public/_redirects`.
 
-Arquivos WASM (~31 MiB) excedem o limite de 25 MiB do Cloudflare Pages e são carregados via CDN (unpkg) em runtime.
+Arquivos WASM (~31 MiB) excedem o limite de 25 MiB do Cloudflare Pages e são carregados via CDN (unpkg) em runtime. Apenas os `.js` do FFmpeg vão no bundle de deploy.
+
+Use `npx npm@10.9.2 install` localmente para manter o `package-lock.json` compatível com o `npm ci` da Cloudflare.
 
 ### Headers em outros hosts
 
@@ -69,6 +75,10 @@ Cross-Origin-Resource-Policy: cross-origin
 
 Sem eles, o FFmpeg multi-thread não estará disponível. Detalhes em [docs/DOCUMENTATION.md#18-build-e-deploy](docs/DOCUMENTATION.md#18-build-e-deploy).
 
-## Licença
+## Licenças e open source
 
-Projeto privado (`"private": true` no package.json).
+Este projeto usa [FFmpeg](https://ffmpeg.org) (LGPL) e outras bibliotecas open source. Atribuições completas: [/licenses](https://nouploadvideo.pages.dev/licenses) (ou `http://localhost:4200/licenses` em dev).
+
+O footer do site exibe **Powered by FFmpeg** com link para ffmpeg.org.
+
+Repositório npm privado (`"private": true` no `package.json`) — isso não impede o site público nem a página de licenças.

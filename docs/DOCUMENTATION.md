@@ -36,6 +36,7 @@ Conversor de vídeo 100% no navegador, sem upload para servidor. Todo o processa
 19. [Testes](#19-testes)
 20. [Troubleshooting](#20-troubleshooting)
 21. [Decisões técnicas](#21-decisões-técnicas)
+22. [Licenças e open source](#22-licenças-e-open-source)
 
 ---
 
@@ -50,6 +51,7 @@ Conversor de vídeo 100% no navegador, sem upload para servidor. Todo o processa
 | Processamento | Web Worker dedicado (UI permanece responsiva) |
 | Limite de arquivo | 200 MB por arquivo |
 | Multi-arquivo | Fila sequencial com progresso individual |
+| Produção (exemplo) | https://nouploadvideo.pages.dev |
 
 ---
 
@@ -93,8 +95,9 @@ Conversor de vídeo 100% no navegador, sem upload para servidor. Todo o processa
 | Extração MP3 | `ffmpeg-args.ts` | `-vn -acodec libmp3lame` |
 | FFmpeg via Web Worker | `ffmpeg.worker.ts` | UI não bloqueia durante encode |
 | Lazy load do engine | `FfmpegService.init()` | WASM carregado na 1ª conversão |
-| Single-thread fallback | `WorkerService` | `/ffmpeg/` quando sem isolamento |
-| Multi-thread | `WorkerService` | `/ffmpeg-mt/` se `crossOriginIsolated` |
+| Single-thread fallback | `WorkerService` | `.js` em `/ffmpeg/`; WASM via unpkg |
+| Multi-thread | `WorkerService` | `.js` + worker em `/ffmpeg-mt/` se `crossOriginIsolated` |
+| WASM via CDN (prod) | `ffmpeg-assets.constants.ts` | unpkg `@ffmpeg/core*` 0.12.6 (~31 MiB; limite Cloudflare) |
 | WebCodecs fast path | `WebCodecsService` | MP4/WebM → MP4 via MediaRecorder |
 | Fallback WebCodecs → FFmpeg | `FfmpegService.convert()` | Silencioso em falha |
 | 4 estratégias MP4 | `ffmpeg-args.ts` | remux → vídeo copy + AAC → H.264 + áudio copy → full transcode |
@@ -174,8 +177,12 @@ Conversor de vídeo 100% no navegador, sem upload para servidor. Todo o processa
 | Preferência do sistema | `ThemeService`, `index.html` | Sem valor salvo: segue `prefers-color-scheme` |
 | Anti-FOUC de tema | `index.html` (script inline) | Aplica `data-theme` antes do bootstrap do Angular |
 | Footer global | `AppComponent` | Links, tagline, copyright dinâmico |
+| **Powered by FFmpeg** | `AppComponent` footer | Link para https://ffmpeg.org |
+| Link **Licenses** | Footer + copyright | Rota `/licenses` |
+| Página de licenças | `LicensesPage` | LGPL, tabela de dependências, disclaimer |
+| Favicon da marca | `public/favicon.svg` + PNG | Substitui ícone padrão do Angular |
 | Nav ativa | `RouterLinkActive` | Destaque na rota atual |
-| 4 páginas SEO | `features/pages/*` | + conversor geral |
+| 4 páginas SEO + licenças | `features/pages/*` | Conversor geral + `/licenses` |
 | Meta title/description | Cada page | Via `Title` e `Meta` Angular |
 | Lazy loading de rotas | `app.routes.ts` | `loadComponent` |
 | Fonte Inter | `index.html` | Google Fonts |
@@ -209,7 +216,10 @@ Conversor de vídeo 100% no navegador, sem upload para servidor. Todo o processa
 | Funcionalidade | Onde | Detalhe |
 |----------------|------|---------|
 | Setup FFmpeg no `postinstall` | `package.json` | `npm run setup:ffmpeg` automático |
-| Assets WASM locais | `public/ffmpeg*` | Same-origin, sem CDN em runtime |
+| Assets `.js` locais | `public/ffmpeg*` | `ffmpeg-core.js` (+ worker MT) same-origin |
+| WASM local (dev opcional) | `setup-ffmpeg-assets.mjs` | Baixa `.wasm` se `CF_PAGES` e `SKIP_FFMPEG_WASM` ausentes |
+| WASM em produção | `WorkerService` + unpkg | Não entra no bundle do deploy (limite 25 MiB) |
+| Favicon / touch icon | `public/favicon.svg`, PNGs | Referenciados em `index.html` |
 | Headers COOP/COEP (prod) | `public/_headers` | Cloudflare Pages e hosts compatíveis |
 | Redirect SPA (prod) | `public/_redirects` | Rotas Angular → `index.html` (evita 404 no F5) |
 | Headers COOP/COEP (dev) | `angular.json` | Habilita SharedArrayBuffer |
@@ -229,6 +239,7 @@ Funcionalidades presentes no código mas **sem fluxo ativo** ou **não integrada
 | Cancelar conversão em andamento | **Não implementado** | Não há botão nem abort no worker |
 | Pausar/retomar fila | **Não implementado** | Fila só avança sequencialmente |
 | Histórico persistente | **Não implementado** | Estado só em memória (signals) |
+| Política de privacidade | **Não implementado** | Recomendado antes de AdSense/analytics |
 | Testes dos componentes core | **Parcial** | `app.component.spec.ts` e `theme.service.spec.ts` |
 
 ---
@@ -291,13 +302,16 @@ NoUploadVideo/
 ├── public/
 │   ├── _headers                 # COOP/COEP para Cloudflare Pages (produção)
 │   ├── _redirects               # SPA fallback (rotas Angular → index.html)
-│   ├── ffmpeg/                  # Core single-thread (servido estaticamente)
+│   ├── favicon.svg              # Ícone da aba (marca NoUploadVideo)
+│   ├── favicon-32.png
+│   ├── apple-touch-icon.png
+│   ├── ffmpeg/                  # Core single-thread (.js no deploy; .wasm opcional local)
 │   │   ├── ffmpeg-core.js
-│   │   ├── ffmpeg-core.wasm
+│   │   └── ffmpeg-core.wasm     # gitignore; dev local ou CDN em prod
 │   └── ffmpeg-mt/               # Core multi-thread
 │       ├── ffmpeg-core.js
-│       ├── ffmpeg-core.wasm
-│       └── ffmpeg-core.worker.js
+│       ├── ffmpeg-core.worker.js
+│       └── ffmpeg-core.wasm     # gitignore; dev local ou CDN em prod
 ├── docs/
 │   ├── DOCUMENTATION.md         # Este arquivo
 │   ├── ARCHITECTURE.md          # Diagramas
@@ -312,7 +326,9 @@ NoUploadVideo/
         ├── app.routes.ts        # Rotas lazy-loaded
         ├── core/
         │   ├── constants/
-        │   │   └── conversion.constants.ts
+        │   │   ├── conversion.constants.ts
+        │   │   ├── ffmpeg-assets.constants.ts
+        │   │   └── open-source-licenses.constants.ts
         │   ├── models/
         │   │   ├── conversion-format.model.ts
         │   │   ├── conversion-queue-item.model.ts
@@ -349,6 +365,7 @@ NoUploadVideo/
             │   └── converter.component.ts
             └── pages/
                 ├── avi-to-mp4/
+                ├── licenses/
                 ├── mkv-to-mp4/
                 ├── mov-to-mp4/
                 └── video-converter/
@@ -441,7 +458,8 @@ Gerencia o ciclo de vida do Web Worker.
 |------------------|---------|
 | Spawn | `new Worker(ffmpeg.worker, { type: 'module' })` |
 | Init | Envia `coreURL`, `wasmURL`, `workerURL` ao worker |
-| Multi-thread | Usa `/ffmpeg-mt/` se `crossOriginIsolated && SharedArrayBuffer` |
+| Multi-thread | Usa `/ffmpeg-mt/` para `.js` e worker se `crossOriginIsolated` |
+| WASM | Sempre via **unpkg** (`FFMPEG_CDN_BASE` em `ffmpeg-assets.constants.ts`) |
 | Progresso | `Subject` + `NgZone.run()` para atualizar UI |
 | Timeout | 120 s para carregamento do engine |
 | Transfer | `fileData` transferido sem cópia na main thread |
@@ -449,8 +467,14 @@ Gerencia o ciclo de vida do Web Worker.
 **URLs resolvidas em runtime:**
 
 ```
-Single-thread:  /ffmpeg/ffmpeg-core.js + ffmpeg-core.wasm
-Multi-thread:   /ffmpeg-mt/ffmpeg-core.js + .wasm + ffmpeg-core.worker.js
+Single-thread:
+  coreURL:   {origin}/ffmpeg/ffmpeg-core.js
+  wasmURL:   https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm/ffmpeg-core.wasm
+
+Multi-thread:
+  coreURL:   {origin}/ffmpeg-mt/ffmpeg-core.js
+  wasmURL:   https://unpkg.com/@ffmpeg/core-mt@0.12.6/dist/esm/ffmpeg-core.wasm
+  workerURL: {origin}/ffmpeg-mt/ffmpeg-core.worker.js
 ```
 
 ### 7.4 `ffmpeg.worker.ts`
@@ -695,6 +719,17 @@ Cada página usa `LandingLayoutComponent` + `ConverterComponent` com textos e me
 
 Cada página define `Title` e meta `description` via `Meta` e `Title` do Angular.
 
+### `LicensesPage`
+
+Página estática de conformidade open source em `/licenses`.
+
+| Conteúdo | Detalhe |
+|----------|---------|
+| FFmpeg | Link para [ffmpeg.org](https://ffmpeg.org), menção **LGPL 2.1+**, [legal page](https://ffmpeg.org/legal.html) |
+| Dependências | Tabela gerada de `OPEN_SOURCE_DEPENDENCIES` |
+| Disclaimer | Uso “as is”; responsabilidade do usuário pelo conteúdo convertido |
+| Footer | Link “Back to converter” → `/video-converter` |
+
 ---
 
 ## 10. Rotas e SEO
@@ -708,6 +743,7 @@ Definidas em `app.routes.ts`:
 | `/avi-to-mp4` | AviToMp4Page | AVI to MP4 Converter |
 | `/mkv-to-mp4` | MkvToMp4Page | MKV to MP4 Converter |
 | `/mov-to-mp4` | MovToMp4Page | MOV to MP4 Converter |
+| `/licenses` | LicensesPage | Licenses & Open Source |
 | `**` | redirect → `/video-converter` | — |
 
 Todas as rotas usam **lazy loading** com `loadComponent`.
@@ -771,20 +807,32 @@ Para estender o tema em novos componentes, prefira sempre variáveis CSS globais
 
 Executado em `postinstall` e via `npm run setup:ffmpeg`.
 
-1. Copia `ffmpeg-core.js` (e worker para MT) de `node_modules/@ffmpeg/core*`
-2. Baixa `ffmpeg-core.wasm` do unpkg (se ainda não existir localmente)
+1. Copia `ffmpeg-core.js` (e `ffmpeg-core.worker.js` para MT) de `node_modules/@ffmpeg/core*`
+2. Baixa `ffmpeg-core.wasm` do unpkg **somente se** `SKIP_FFMPEG_WASM≠1` e `CF_PAGES≠1`
 3. Grava em `public/ffmpeg/` e `public/ffmpeg-mt/`
 
-### Por que assets locais?
+Na **Cloudflare Pages**, `CF_PAGES=1` é definido automaticamente no build — o `.wasm` **não** é copiado para o artefato de deploy.
 
-- URLs same-origin evitam problemas de CORS e blob URLs
-- Controle de versão fixa (0.12.6)
-- Carregamento confiável em produção
+### Estratégia híbrida (`.js` local + WASM CDN)
+
+| Asset | Origem | Motivo |
+|-------|--------|--------|
+| `ffmpeg-core.js` | Same-origin (`/ffmpeg/`) | Pequeno; evita problemas com `createFFmpegCore` e COEP |
+| `ffmpeg-core.worker.js` | Same-origin (`/ffmpeg-mt/`) | Worker aninhado MT deve ser same-origin |
+| `ffmpeg-core.wasm` | unpkg (`ffmpeg-assets.constants.ts`) | ~31 MiB; acima do limite de 25 MiB do Cloudflare Pages |
+
+Versão fixa em código: **0.12.6** (`FFMPEG_CORE_VERSION`).
+
+### Desenvolvimento local
+
+- `npm run setup:ffmpeg` baixa o WASM para `public/` (útil offline ou para testar same-origin)
+- Arquivos `.wasm` estão no `.gitignore` — não vão para o GitHub
+- Em runtime, `WorkerService` **sempre** usa unpkg para WASM (comportamento igual dev e prod)
 
 ### Tamanho aproximado
 
-- WASM: ~25–31 MB por variante (single e MT)
-- Primeira conversão baixa/carrega o engine (pode levar alguns segundos)
+- WASM: ~31 MiB por variante (single e MT)
+- Na primeira conversão, o navegador baixa o WASM do CDN (pode levar alguns segundos)
 
 ---
 
@@ -981,10 +1029,13 @@ Reinicie `npm start` após alterar:
 ```
 dist/no-upload-video/browser/
 ├── index.html
+├── favicon.svg
+├── favicon-32.png
+├── apple-touch-icon.png
 ├── main-*.js
 ├── worker-*.js          # ffmpeg.worker bundle
-├── ffmpeg/              # assets WASM single-thread
-└── ffmpeg-mt/           # assets WASM multi-thread
+├── ffmpeg/              # ffmpeg-core.js (sem .wasm no deploy Cloudflare)
+└── ffmpeg-mt/           # ffmpeg-core.js + ffmpeg-core.worker.js
 ```
 
 ### Headers obrigatórios em produção
@@ -1057,11 +1108,15 @@ O projeto inclui `public/_headers` e `public/_redirects`, copiados automaticamen
 |------|--------|
 | `NODE_VERSION` | `20` |
 
-5. **Save and Deploy** — o primeiro build pode levar 5–10 minutos (assets WASM).
+5. **Save and Deploy** — o primeiro build leva alguns minutos.
 
 **Importante:** use o fluxo **Pages**, não **Workers** (`wrangler deploy` não se aplica a este projeto).
 
+**Deploy ativo (exemplo):** https://nouploadvideo.pages.dev
+
 **Limite de 25 MiB:** cada `ffmpeg-core.wasm` tem ~31 MiB — acima do limite do Cloudflare Pages. O projeto contorna isso carregando o **WASM via unpkg em runtime** (`ffmpeg-assets.constants.ts`); o build na Cloudflare define `CF_PAGES=1` e o `postinstall` **não** copia `.wasm` para `public/`. Apenas os `.js` (~centenas de KB) são publicados no deploy.
+
+**Retry deployment:** repetir um deploy antigo no painel usa o **mesmo commit** — após `git push`, aguarde o deploy automático do commit mais recente ou use **Create deployment** na branch `main`.
 
 ### Hospedagem estática
 
@@ -1131,7 +1186,11 @@ A classe de alto nível cria workers aninhados com blob URLs. No ambiente Angula
 - Hang de ~120 s no carregamento
 - Timeout no init
 
-**Solução:** `createFFmpegCore` com URLs same-origin em `/ffmpeg/` e `/ffmpeg-mt/`.
+**Solução:** `createFFmpegCore` com `coreURL` same-origin em `/ffmpeg/` e `/ffmpeg-mt/`; WASM via unpkg.
+
+### Por que WASM no CDN e não no deploy?
+
+O Cloudflare Pages rejeita arquivos estáticos acima de **25 MiB**. Os binários FFmpeg WASM têm ~31 MiB. Publicar só os `.js` e buscar o `.wasm` em runtime mantém o deploy válido sem sacrificar a versão fixa do engine.
 
 ### Por que Web Worker?
 
@@ -1154,6 +1213,39 @@ Equilíbrio entre usabilidade e limites práticos de memória do browser para WA
 
 ---
 
+## 22. Licenças e open source
+
+NoUploadVideo usa software open source, em especial **FFmpeg** (LGPL). A página pública `/licenses` documenta atribuições e links legais.
+
+### Onde está no código
+
+| Artefato | Caminho |
+|----------|---------|
+| Página | `src/app/features/pages/licenses/licenses.page.ts` |
+| Lista de dependências | `src/app/core/constants/open-source-licenses.constants.ts` |
+| Atribuição no footer | `AppComponent` — “Powered by FFmpeg” → https://ffmpeg.org |
+| Link no rodapé | `/licenses` e “Open source licenses” no copyright |
+
+### Conteúdo da página `/licenses`
+
+1. **FFmpeg** — link para [ffmpeg.org](https://ffmpeg.org), licença [LGPL 2.1+](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html), [página legal](https://ffmpeg.org/legal.html)
+2. **Tabela de bibliotecas** — Angular, @ffmpeg/*, JSZip, RxJS, Zone.js, tslib (nome, versão, licença, propósito)
+3. **Disclaimer** — ferramenta “as is”; usuário responsável pelo conteúdo convertido
+
+### O que ainda não existe
+
+| Item | Status |
+|------|--------|
+| Política de privacidade | Não implementada (recomendada antes de analytics/AdSense) |
+| Termos de uso | Não implementados |
+| `LICENSE` na raiz do repo | Não há — o app é `"private": true` no `package.json`; atribuições estão em `/licenses` |
+
+### Manutenção
+
+Ao adicionar dependência de runtime relevante, atualize `OPEN_SOURCE_DEPENDENCIES` em `open-source-licenses.constants.ts`.
+
+---
+
 ## Referências internas
 
 - [Arquitetura (diagramas)](ARCHITECTURE.md)
@@ -1162,6 +1254,7 @@ Equilíbrio entre usabilidade e limites práticos de memória do browser para WA
 ## Referências externas
 
 - [FFmpeg.wasm](https://ffmpegwasm.netlify.app/)
+- [FFmpeg — Legal](https://ffmpeg.org/legal.html)
 - [@ffmpeg/core npm](https://www.npmjs.com/package/@ffmpeg/core)
 - [Cross-Origin Isolation](https://developer.mozilla.org/en-US/docs/Web/API/crossOriginIsolated)
 - [WebCodecs API](https://developer.mozilla.org/en-US/docs/Web/API/WebCodecs_API)
