@@ -54,7 +54,7 @@ flowchart LR
 | SEO (resultados) | ██░░░░░░░░ ~20% | Indexação leva dias/semanas |
 | Legal | █████████░ ~90% | LGPL, `/privacy`, `contact@`; falta termos de uso |
 | Métricas | ██████████ 100% | Plausible ativo em produção |
-| Monetização | ░░░░░░░░░░ 0% | AdSense não iniciado |
+| Monetização | ░░░░░░░░░░ 0% | Slots ocultos (`ADS_ENABLED=false`); AdSense não iniciado |
 | Documentação | ██████████ 100% | DOCUMENTATION, ARCHITECTURE, CONTRIBUTING |
 
 ---

@@ -1,4 +1,5 @@
 import { Component, input } from '@angular/core';
+import { ADS_ENABLED } from '../../../core/constants/ads.constants';
 
 export type AdSlotPosition =
   | 'leaderboard'
@@ -11,26 +12,28 @@ export type AdSlotPosition =
   selector: 'app-ad-slot',
   standalone: true,
   template: `
-    <aside
-      class="ad-slot"
-      [class]="'ad-slot--' + position()"
-      [attr.aria-label]="ariaLabel()"
-      role="complementary"
-    >
-      <div class="ad-slot__frame">
-        <span class="ad-slot__label">Advertisement</span>
-        <div class="ad-slot__placeholder">
-          <span class="ad-slot__size">{{ sizeLabel() }}</span>
-          <span class="ad-slot__hint">Ad placement — insert your ad code here</span>
+    @if (adsEnabled) {
+      <aside
+        class="ad-slot"
+        [class]="'ad-slot--' + position()"
+        [attr.aria-label]="ariaLabel()"
+        role="complementary"
+      >
+        <div class="ad-slot__frame">
+          <span class="ad-slot__label">Advertisement</span>
+          <div class="ad-slot__placeholder">
+            <span class="ad-slot__size">{{ sizeLabel() }}</span>
+            <span class="ad-slot__hint">Ad placement — insert your ad code here</span>
+          </div>
         </div>
-      </div>
-    </aside>
+      </aside>
+    }
   `,
   styleUrl: './ad-slot.component.scss',
 })
 export class AdSlotComponent {
+  readonly adsEnabled = ADS_ENABLED;
   readonly position = input<AdSlotPosition>('in-content');
-
   readonly ariaLabel = input('Advertisement placement area');
 
   /** Human-readable slot dimensions for publishers */

@@ -132,7 +132,7 @@ import { Meta, Title } from '@angular/platform-browser';
         <h2 id="contact-heading" class="privacy__section-title">Contact</h2>
         <p>
           Questions about this policy:
-          <a href="mailto:contact@nouploadvideo.com">contact@nouploadvideo.com</a>
+          <a href="mailto:contact@nouploadvideo.com">contact&#64;nouploadvideo.com</a>
         </p>
         <p>
           You can also open an issue on

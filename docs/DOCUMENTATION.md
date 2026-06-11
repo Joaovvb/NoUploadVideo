@@ -655,7 +655,7 @@ Gerencia o tema visual claro/escuro com Angular **signals**.
 | `HeroSectionComponent` | `app-hero-section` | Hero da landing |
 | `FeaturesSectionComponent` | `app-features-section` | Grid de features |
 | `CtaBannerComponent` | `app-cta-banner` | Call-to-action |
-| `AdSlotComponent` | `app-ad-slot` | Placeholder para anúncios |
+| `AdSlotComponent` | `app-ad-slot` | Placeholder para anúncios (`ADS_ENABLED` em `ads.constants.ts`) |
 | `ThemeToggleComponent` | `app-theme-toggle` | Botão de alternância claro/escuro no header |
 
 ### Tema claro / escuro (dark mode)
