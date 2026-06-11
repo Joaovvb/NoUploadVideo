@@ -2,6 +2,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { ZIP_BATCH_SIZE } from '../constants/download.constants';
 import { AudioTrimRange } from '../models/audio-trim-range.model';
+import { areTrimRangesEqual } from '../utils/audio-trim-range.util';
 import { OutputFormat } from '../models/conversion-format.model';
 import { ConversionQueueItem } from '../models/conversion-queue-item.model';
 import { getQueueItemDownloadName } from '../utils/download-filename.util';
@@ -78,6 +79,10 @@ export class ConversionQueueService {
   setItemTrim(id: string, trimRange: AudioTrimRange | null): void {
     const item = this.items().find((entry) => entry.id === id);
     if (!item || item.status === 'processing') {
+      return;
+    }
+
+    if (areTrimRangesEqual(item.trimRange, trimRange)) {
       return;
     }
 

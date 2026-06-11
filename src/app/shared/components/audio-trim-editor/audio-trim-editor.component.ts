@@ -15,6 +15,7 @@ import {
   MIN_TRIM_DURATION_SEC,
   isValidTrimRange,
 } from '../../../core/models/audio-trim-range.model';
+import { areTrimRangesEqual } from '../../../core/utils/audio-trim-range.util';
 import { formatTimeLabel } from '../../../core/utils/format-time.util';
 
 @Component({
@@ -143,37 +144,33 @@ export class AudioTrimEditorComponent {
   readonly playheadSec = signal(0);
   readonly validationMessage = signal<string | null>(null);
 
-  private previewVideo: HTMLVideoElement | null = null;
+  private loadedFile: File | null = null;
+  private metadataApplied = false;
 
   readonly formatTime = formatTimeLabel;
 
   readonly selectionDuration = computed(() => Math.max(0, this.endSec() - this.startSec()));
 
-  readonly sliderStep = () => {
-    const duration = this.durationSec();
-    return duration > 600 ? 1 : 0.1;
-  };
+  readonly sliderStep = computed(() => (this.durationSec() > 600 ? 1 : 0.1));
 
   constructor() {
     effect(() => {
       const file = this.file();
-      const existing = this.trimRange();
-
-      this.revokePreview();
-      const url = URL.createObjectURL(file);
-      this.previewUrl.set(url);
-
-      this.trimEnabled.set(!!existing);
-      if (existing) {
-        this.startSec.set(existing.startSec);
-        this.endSec.set(existing.endSec);
-      } else {
-        this.startSec.set(0);
-        this.endSec.set(0);
+      if (this.loadedFile === file) {
+        return;
       }
 
-      this.durationSec.set(0);
-      this.validationMessage.set(null);
+      this.resetForFile(file);
+    });
+
+    effect(() => {
+      if (!this.trimEnabled()) {
+        this.revokePreview();
+        this.metadataApplied = false;
+        return;
+      }
+
+      this.ensurePreviewUrl(this.file());
     });
 
     this.destroyRef.onDestroy(() => this.revokePreview());
@@ -184,7 +181,7 @@ export class AudioTrimEditorComponent {
 
     if (!enabled) {
       this.validationMessage.set(null);
-      this.trimRangeChange.emit(null);
+      this.emitTrimIfValid();
       return;
     }
 
@@ -198,7 +195,11 @@ export class AudioTrimEditorComponent {
   }
 
   onMetadataLoaded(video: HTMLVideoElement): void {
-    this.previewVideo = video;
+    if (this.metadataApplied) {
+      return;
+    }
+
+    this.metadataApplied = true;
     const duration = Number.isFinite(video.duration) ? video.duration : 0;
     this.durationSec.set(duration);
 
@@ -206,14 +207,12 @@ export class AudioTrimEditorComponent {
     if (existing && isValidTrimRange(existing, duration)) {
       this.startSec.set(existing.startSec);
       this.endSec.set(existing.endSec);
-    } else if (duration > 0 && !this.trimRange()) {
+    } else if (duration > 0) {
       this.startSec.set(0);
       this.endSec.set(duration);
     }
 
-    if (this.trimEnabled()) {
-      this.emitTrimIfValid();
-    }
+    this.emitTrimIfValid();
   }
 
   onTimeUpdate(currentTime: number): void {
@@ -259,9 +258,63 @@ export class AudioTrimEditorComponent {
     this.emitTrimIfValid();
   }
 
-  private emitTrimIfValid(): void {
-    if (!this.trimEnabled()) {
+  private resetForFile(file: File): void {
+    this.revokePreview();
+    this.metadataApplied = false;
+    this.loadedFile = file;
+    this.durationSec.set(0);
+    this.validationMessage.set(null);
+
+    const existing = this.trimRange();
+    this.trimEnabled.set(!!existing);
+    if (existing) {
+      this.startSec.set(existing.startSec);
+      this.endSec.set(existing.endSec);
+    } else {
+      this.startSec.set(0);
+      this.endSec.set(0);
+    }
+  }
+
+  private ensurePreviewUrl(file: File): void {
+    if (this.previewUrl() && this.loadedFile === file) {
       return;
+    }
+
+    this.revokePreview();
+    this.metadataApplied = false;
+    this.loadedFile = file;
+    this.previewUrl.set(URL.createObjectURL(file));
+  }
+
+  private emitTrimIfValid(): void {
+    const nextRange = this.resolveTrimRange();
+
+    if (areTrimRangesEqual(nextRange, this.trimRange())) {
+      return;
+    }
+
+    if (!nextRange && !this.trimEnabled()) {
+      this.validationMessage.set(null);
+      this.trimRangeChange.emit(null);
+      return;
+    }
+
+    if (!nextRange) {
+      this.validationMessage.set(
+        `Select at least ${MIN_TRIM_DURATION_SEC}s between start and end.`,
+      );
+      this.trimRangeChange.emit(null);
+      return;
+    }
+
+    this.validationMessage.set(null);
+    this.trimRangeChange.emit(nextRange);
+  }
+
+  private resolveTrimRange(): AudioTrimRange | null {
+    if (!this.trimEnabled()) {
+      return null;
     }
 
     const range: AudioTrimRange = {
@@ -272,21 +325,14 @@ export class AudioTrimEditorComponent {
     const duration = this.durationSec();
 
     if (!isValidTrimRange(range, duration)) {
-      this.validationMessage.set(
-        `Select at least ${MIN_TRIM_DURATION_SEC}s between start and end.`,
-      );
-      this.trimRangeChange.emit(null);
-      return;
+      return null;
     }
 
     if (duration > 0 && range.startSec <= 0.05 && range.endSec >= duration - 0.05) {
-      this.validationMessage.set(null);
-      this.trimRangeChange.emit(null);
-      return;
+      return null;
     }
 
-    this.validationMessage.set(null);
-    this.trimRangeChange.emit(range);
+    return range;
   }
 
   private revokePreview(): void {

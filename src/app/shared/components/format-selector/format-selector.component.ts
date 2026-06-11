@@ -1,13 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component, input, model } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { OUTPUT_FORMAT_OPTIONS } from '../../../core/constants/conversion.constants';
 import { OutputFormat } from '../../../core/models/conversion-format.model';
 
 @Component({
   selector: 'app-format-selector',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule],
   template: `
     <div class="format-selector">
       <label class="format-selector__label" for="output-format">Output format</label>
@@ -15,11 +14,11 @@ import { OutputFormat } from '../../../core/models/conversion-format.model';
         id="output-format"
         class="format-selector__select"
         [disabled]="disabled()"
-        [ngModel]="selectedFormat()"
-        (ngModelChange)="onFormatChange($event)"
+        [value]="selectedFormat()"
+        (change)="onFormatChange($event)"
       >
         @for (option of formatOptions; track option.value) {
-          <option [ngValue]="option.value">{{ option.label }}</option>
+          <option [value]="option.value">{{ option.label }}</option>
         }
       </select>
     </div>
@@ -65,7 +64,8 @@ export class FormatSelectorComponent {
 
   readonly formatOptions = OUTPUT_FORMAT_OPTIONS;
 
-  onFormatChange(value: OutputFormat): void {
+  onFormatChange(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value as OutputFormat;
     this.selectedFormat.set(value);
   }
 }

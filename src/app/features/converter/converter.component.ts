@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import {
   Component,
   computed,
+  effect,
   inject,
   input,
   model,
@@ -439,6 +440,12 @@ export class ConverterComponent implements OnInit {
 
     const selectedId = this.trimEditItemId();
     return items.find((item) => item.id === selectedId) ?? items[0];
+  });
+
+  private readonly syncTrimTargetOnMp3 = effect(() => {
+    if (this.selectedOutputFormat() === 'mp3') {
+      this.syncTrimEditItemId();
+    }
   });
 
   ngOnInit(): void {
