@@ -47,6 +47,7 @@ Saída: `dist/no-upload-video/browser/`
 | Documento | Conteúdo |
 |-----------|----------|
 | [docs/DOCUMENTATION.md](docs/DOCUMENTATION.md) | Referência completa do projeto |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | O que foi feito e o que falta |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Diagramas de arquitetura e fluxos |
 | [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) | Guia de contribuição e novos formatos |
 

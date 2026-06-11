@@ -9,6 +9,7 @@ Conversor de vídeo 100% no navegador, sem upload para servidor. Todo o processa
 | Documento | Conteúdo |
 |-----------|----------|
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Diagramas visuais (camadas, fluxos, estados) |
+| [ROADMAP.md](ROADMAP.md) | O que foi feito e o que falta (workmap) |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Guia de contribuição e como adicionar formatos |
 
 ---
@@ -325,6 +326,7 @@ NoUploadVideo/
 ├── docs/
 │   ├── DOCUMENTATION.md         # Este arquivo
 │   ├── ARCHITECTURE.md          # Diagramas
+│   ├── ROADMAP.md               # Workmap: feito vs pendente
 │   └── CONTRIBUTING.md        # Guia de contribuição
 └── src/
     ├── index.html
@@ -1305,6 +1307,7 @@ Ao adicionar dependência de runtime relevante, atualize `OPEN_SOURCE_DEPENDENCI
 ## Referências internas
 
 - [Arquitetura (diagramas)](ARCHITECTURE.md)
+- [Roadmap / workmap](ROADMAP.md)
 - [Guia de contribuição](CONTRIBUTING.md)
 
 ## Referências externas
