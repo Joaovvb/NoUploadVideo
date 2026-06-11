@@ -57,6 +57,8 @@ Saída: `dist/no-upload-video/browser/`
 
 Headers COOP/COEP e redirect SPA já estão em `public/_headers` e `public/_redirects`.
 
+Arquivos WASM (~31 MiB) excedem o limite de 25 MiB do Cloudflare Pages e são carregados via CDN (unpkg) em runtime.
+
 ### Headers em outros hosts
 
 ```

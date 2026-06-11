@@ -37,6 +37,10 @@ yarn-error.log
 testem.log
 /typings
 
+# FFmpeg WASM (>25 MiB; loaded from CDN in production, optional locally)
+public/ffmpeg/ffmpeg-core.wasm
+public/ffmpeg-mt/ffmpeg-core.wasm
+
 # System files
 .DS_Store
 Thumbs.db

@@ -1,5 +1,6 @@
 import { Injectable, NgZone, OnDestroy, signal } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
+import { FFMPEG_CDN_BASE } from '../constants/ffmpeg-assets.constants';
 import {
   ConvertPayload,
   WorkerInboundMessage,
@@ -65,12 +66,13 @@ export class WorkerService implements OnDestroy {
   private resolveCoreUrls(): { coreURL: string; wasmURL: string; workerURL?: string } {
     const origin = window.location.origin;
     const useMultithread = typeof SharedArrayBuffer !== 'undefined' && window.crossOriginIsolated;
-    const base = useMultithread ? `${origin}/ffmpeg-mt` : `${origin}/ffmpeg`;
+    const localBase = useMultithread ? `${origin}/ffmpeg-mt` : `${origin}/ffmpeg`;
+    const cdnBase = useMultithread ? FFMPEG_CDN_BASE.multi : FFMPEG_CDN_BASE.single;
 
     return {
-      coreURL: `${base}/ffmpeg-core.js`,
-      wasmURL: `${base}/ffmpeg-core.wasm`,
-      workerURL: useMultithread ? `${base}/ffmpeg-core.worker.js` : undefined,
+      coreURL: `${localBase}/ffmpeg-core.js`,
+      wasmURL: `${cdnBase}/ffmpeg-core.wasm`,
+      workerURL: useMultithread ? `${localBase}/ffmpeg-core.worker.js` : undefined,
     };
   }
 

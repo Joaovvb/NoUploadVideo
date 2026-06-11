@@ -1061,7 +1061,7 @@ O projeto inclui `public/_headers` e `public/_redirects`, copiados automaticamen
 
 **Importante:** use o fluxo **Pages**, não **Workers** (`wrangler deploy` não se aplica a este projeto).
 
-**Limite de arquivo:** cada `ffmpeg-core.wasm` tem ~25 MB; o plano gratuito do Cloudflare limita arquivos estáticos a 25 MiB por arquivo — fique atento se o WASM crescer em versões futuras.
+**Limite de 25 MiB:** cada `ffmpeg-core.wasm` tem ~31 MiB — acima do limite do Cloudflare Pages. O projeto contorna isso carregando o **WASM via unpkg em runtime** (`ffmpeg-assets.constants.ts`); o build na Cloudflare define `CF_PAGES=1` e o `postinstall` **não** copia `.wasm` para `public/`. Apenas os `.js` (~centenas de KB) são publicados no deploy.
 
 ### Hospedagem estática
 
@@ -1108,6 +1108,7 @@ npm test
 | Conversão muito lenta em AVI | Transcodificação completa necessária | Esperado; estratégias intermediárias ajudam quando possível |
 | Erro de memória | Arquivo muito grande / muitas abas | Reduzir tamanho ou fechar abas |
 | WebCodecs falha silenciosamente | Codec não suportado | Fallback automático para FFmpeg |
+| **Cloudflare: arquivo WASM > 25 MiB** | `ffmpeg-core.wasm` ~31 MiB | WASM carregado via unpkg em runtime; `.wasm` fora do deploy (`CF_PAGES=1` no build) |
 | **Cloudflare: `npm ci` / lock file out of sync** | `package-lock.json` gerado com npm 11, build usa npm 10 | Rodar `npx npm@10.9.2 install`, commitar `package-lock.json` e push; ou definir `SKIP_DEPENDENCY_INSTALL=true` e build command `npm install && npm run build` |
 | **`ng.js` not found` após `npm ci` local** | `node_modules` corrompido | Apagar `node_modules`, `npx npm@10.9.2 install`, `npm start` |
 

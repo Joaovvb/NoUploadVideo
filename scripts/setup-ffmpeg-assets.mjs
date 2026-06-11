@@ -5,6 +5,7 @@ import { get } from 'node:https';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const version = '0.12.6';
+const skipWasm = process.env.SKIP_FFMPEG_WASM === '1' || process.env.CF_PAGES === '1';
 
 async function download(url, dest) {
   if (existsSync(dest)) {
@@ -37,10 +38,12 @@ async function setupVariant({ name, npmPackage, unpkgBase }) {
     copyFileSync(workerSource, join(outputDir, 'ffmpeg-core.worker.js'));
   }
 
-  await download(
-    `${unpkgBase}/ffmpeg-core.wasm`,
-    join(outputDir, 'ffmpeg-core.wasm'),
-  );
+  if (!skipWasm) {
+    await download(
+      `${unpkgBase}/ffmpeg-core.wasm`,
+      join(outputDir, 'ffmpeg-core.wasm'),
+    );
+  }
 }
 
 await setupVariant({
@@ -55,4 +58,8 @@ await setupVariant({
   unpkgBase: `https://unpkg.com/@ffmpeg/core-mt@${version}/dist/esm`,
 });
 
-console.log('FFmpeg assets ready in public/ffmpeg/ and public/ffmpeg-mt/');
+if (skipWasm) {
+  console.log('FFmpeg .js assets ready (WASM skipped — loaded from CDN at runtime).');
+} else {
+  console.log('FFmpeg assets ready in public/ffmpeg/ and public/ffmpeg-mt/');
+}
