@@ -16,7 +16,7 @@ Conversor de vídeo no navegador com **FFmpeg WebAssembly**. Processamento 100% 
 - Modo escuro com preferência salva no navegador
 - Limite de **200 MB** por arquivo
 
-**Site em produção:** https://nouploadvideo.pages.dev
+**Site em produção:** https://nouploadvideo.com ([alternativo](https://nouploadvideo.pages.dev))
 
 ## Stack
 
@@ -59,7 +59,9 @@ Saída: `dist/no-upload-video/browser/`
 3. Build output: `dist/no-upload-video/browser`
 4. Variável: `NODE_VERSION` = `20`
 
-Headers COOP/COEP e redirect SPA já estão em `public/_headers` e `public/_redirects`.
+Headers COOP/COEP, segurança (`X-Content-Type-Options`, `Referrer-Policy`) e redirect SPA já estão em `public/_headers` e `public/_redirects`.
+
+**Domínio customizado:** Cloudflare Registrar → `nouploadvideo.com` + `www` em Custom domains do projeto Pages.
 
 Arquivos WASM (~31 MiB) excedem o limite de 25 MiB do Cloudflare Pages e são carregados via CDN (unpkg) em runtime. Apenas os `.js` do FFmpeg vão no bundle de deploy.
 
@@ -77,7 +79,7 @@ Sem eles, o FFmpeg multi-thread não estará disponível. Detalhes em [docs/DOCU
 
 ## Licenças e open source
 
-Este projeto usa [FFmpeg](https://ffmpeg.org) (LGPL) e outras bibliotecas open source. Atribuições completas: [/licenses](https://nouploadvideo.pages.dev/licenses) (ou `http://localhost:4200/licenses` em dev).
+Este projeto usa [FFmpeg](https://ffmpeg.org) (LGPL) e outras bibliotecas open source. Atribuições completas: [/licenses](https://nouploadvideo.com/licenses) (ou `http://localhost:4200/licenses` em dev).
 
 O footer do site exibe **Powered by FFmpeg** com link para ffmpeg.org.
 

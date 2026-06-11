@@ -52,7 +52,9 @@ Conversor de vídeo 100% no navegador, sem upload para servidor. Todo o processa
 | Limite de arquivo | 200 MB por arquivo |
 | Multi-arquivo | Fila sequencial com progresso individual |
 | Idioma da UI | Inglês (en) — `index.html` `lang="en"` |
-| Produção (exemplo) | https://nouploadvideo.pages.dev |
+| Produção | https://nouploadvideo.com (domínio customizado) |
+| Produção (alternativo) | https://nouploadvideo.pages.dev |
+| Repositório | https://github.com/Joaovvb/NoUploadVideo |
 
 ---
 
@@ -125,7 +127,7 @@ Conversor de vídeo 100% no navegador, sem upload para servidor. Todo o processa
 | Dados em memória | `outputData: Uint8Array` | Evita `fetch(blob:)` e erros de permissão em lotes grandes |
 | Remover da fila | Botão × | Bloqueado durante `processing` |
 | Limpar concluídos | `clearCompleted()` | Botão “Clear completed” |
-| Contadores | `ConverterComponent` | “X na fila”, “Y concluído(s)”, “Z baixado(s)” |
+| Contadores | `ConverterComponent` | “X queued”, “Y completed”, “Z downloaded” |
 | Lista com scroll | `converter.component` | `max-height: min(36vh, 300px)` |
 | Dica de scroll | UI | “Role a lista para ver todos” se > 4 itens |
 | Exibir tamanho do arquivo | `FileSizePipe` | Na linha de cada item |
@@ -221,7 +223,7 @@ Conversor de vídeo 100% no navegador, sem upload para servidor. Todo o processa
 | WASM local (dev opcional) | `setup-ffmpeg-assets.mjs` | Baixa `.wasm` se `CF_PAGES` e `SKIP_FFMPEG_WASM` ausentes |
 | WASM em produção | `WorkerService` + unpkg | Não entra no bundle do deploy (limite 25 MiB) |
 | Favicon / touch icon | `public/favicon.svg`, PNGs | Referenciados em `index.html` |
-| Headers COOP/COEP (prod) | `public/_headers` | Cloudflare Pages e hosts compatíveis |
+| Headers COOP/COEP + segurança (prod) | `public/_headers` | COOP, COEP, CORP, `X-Content-Type-Options`, `Referrer-Policy` |
 | Redirect SPA (prod) | `public/_redirects` | Rotas Angular → `index.html` (evita 404 no F5) |
 | Headers COOP/COEP (dev) | `angular.json` | Habilita SharedArrayBuffer |
 | Prebundle exclude FFmpeg | `angular.json` | Evita quebra de workers no Vite |
@@ -301,7 +303,7 @@ NoUploadVideo/
 ├── scripts/
 │   └── setup-ffmpeg-assets.mjs  # Copia/baixa assets WASM do FFmpeg
 ├── public/
-│   ├── _headers                 # COOP/COEP para Cloudflare Pages (produção)
+│   ├── _headers                 # COOP/COEP + headers de segurança (Cloudflare Pages)
 │   ├── _redirects               # SPA fallback (rotas Angular → index.html)
 │   ├── favicon.svg              # Ícone da aba (marca NoUploadVideo)
 │   ├── favicon-32.png
@@ -848,7 +850,7 @@ Versão fixa em código: **0.12.6** (`FFMPEG_CORE_VERSION`).
 - Controles fixos abaixo da lista (formato + botões)
 - Remoção individual (exceto item em processamento)
 - "Clear completed" remove itens concluídos e revoga URLs
-- **Salvar todos em pasta (N)** (Chrome/Edge) ou **Baixar todos em ZIP (N)** aparece com **2 ou mais** concluídos
+- **Save all to folder (N)** (Chrome/Edge) ou **Download all as ZIP (N)** aparece com **2 ou mais** completed
 - Com **File System Access API**, cada vídeo é gravado diretamente na pasta escolhida (ideal para dezenas de arquivos grandes)
 - Sem suporte a pasta, **JSZip** gera vários ZIPs (`videos-convertidos-YYYY-MM-DD-parte-X-de-Y.zip`) com até **5** vídeos cada (`ZIP_BATCH_SIZE`)
 - Itens convertidos **antes** de `outputData` existir precisam ser **reconvertidos** (Clear completed → converter de novo)
@@ -1113,7 +1115,13 @@ O projeto inclui `public/_headers` e `public/_redirects`, copiados automaticamen
 
 **Importante:** use o fluxo **Pages**, não **Workers** (`wrangler deploy` não se aplica a este projeto).
 
-**Deploy ativo (exemplo):** https://nouploadvideo.pages.dev
+**Produção:** https://nouploadvideo.com (domínio registrado na Cloudflare Registrar)
+
+**URL alternativa Pages:** https://nouploadvideo.pages.dev
+
+**Domínio customizado:** Workers & Pages → projeto `nouploadvideo` → **Custom domains** → `nouploadvideo.com` + `www.nouploadvideo.com`. Com domínio na mesma conta Cloudflare, use **Complete DNS setup** e aguarde status **Active**.
+
+**SSL recomendado (zone `nouploadvideo.com`):** SSL/TLS → **Always Use HTTPS: On**; redirect `www` → apex (ou vice-versa) via Redirect Rules.
 
 **Limite de 25 MiB:** cada `ffmpeg-core.wasm` tem ~31 MiB — acima do limite do Cloudflare Pages. O projeto contorna isso carregando o **WASM via unpkg em runtime** (`ffmpeg-assets.constants.ts`); o build na Cloudflare define `CF_PAGES=1` e o `postinstall` **não** copia `.wasm` para `public/`. Apenas os `.js` (~centenas de KB) são publicados no deploy.
 
