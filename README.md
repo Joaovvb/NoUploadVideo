@@ -36,7 +36,7 @@ Abra [http://localhost:4200](http://localhost:4200).
 npm run build
 ```
 
-Saída: `dist/no-upload-video/`
+Saída: `dist/no-upload-video/browser/`
 
 ## Documentação
 
@@ -48,7 +48,16 @@ Saída: `dist/no-upload-video/`
 
 ## Deploy
 
-Em produção, configure os headers:
+### Cloudflare Pages (recomendado)
+
+1. Conecte o repositório GitHub em **Workers & Pages → Create → Pages**
+2. Build command: `npm install && npm run build`
+3. Build output: `dist/no-upload-video/browser`
+4. Variável: `NODE_VERSION` = `20`
+
+Headers COOP/COEP e redirect SPA já estão em `public/_headers` e `public/_redirects`.
+
+### Headers em outros hosts
 
 ```
 Cross-Origin-Opener-Policy: same-origin

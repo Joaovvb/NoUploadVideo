@@ -210,6 +210,8 @@ Conversor de vídeo 100% no navegador, sem upload para servidor. Todo o processa
 |----------------|------|---------|
 | Setup FFmpeg no `postinstall` | `package.json` | `npm run setup:ffmpeg` automático |
 | Assets WASM locais | `public/ffmpeg*` | Same-origin, sem CDN em runtime |
+| Headers COOP/COEP (prod) | `public/_headers` | Cloudflare Pages e hosts compatíveis |
+| Redirect SPA (prod) | `public/_redirects` | Rotas Angular → `index.html` (evita 404 no F5) |
 | Headers COOP/COEP (dev) | `angular.json` | Habilita SharedArrayBuffer |
 | Prebundle exclude FFmpeg | `angular.json` | Evita quebra de workers no Vite |
 | `eventCoalescing` | `app.config.ts` | Otimização Zone.js |
@@ -287,6 +289,8 @@ NoUploadVideo/
 ├── scripts/
 │   └── setup-ffmpeg-assets.mjs  # Copia/baixa assets WASM do FFmpeg
 ├── public/
+│   ├── _headers                 # COOP/COEP para Cloudflare Pages (produção)
+│   ├── _redirects               # SPA fallback (rotas Angular → index.html)
 │   ├── ffmpeg/                  # Core single-thread (servido estaticamente)
 │   │   ├── ffmpeg-core.js
 │   │   ├── ffmpeg-core.wasm
@@ -926,14 +930,15 @@ O campo `time` do callback `setProgress` do FFmpeg indica segundos já processad
 
 ### Pré-requisitos
 
-- Node.js 18+ (recomendado 20+)
-- npm
+- Node.js 20+ (recomendado)
+- npm 10.x (alinhado com Cloudflare Pages; evita dessincronizar `package-lock.json`)
 
 ### Comandos
 
 ```bash
 # Instalar dependências (+ setup FFmpeg automático via postinstall)
-npm install
+# Em CI ou após clonar: prefira npm 10 para manter o lock file compatível
+npx npm@10.9.2 install
 
 # Baixar/copiar assets FFmpeg manualmente
 npm run setup:ffmpeg
@@ -1029,6 +1034,35 @@ add_header Cross-Origin-Embedder-Policy require-corp;
     Cross-Origin-Embedder-Policy = "require-corp"
 ```
 
+#### Cloudflare Pages (recomendado)
+
+O projeto inclui `public/_headers` e `public/_redirects`, copiados automaticamente para o build.
+
+**Passo a passo:**
+
+1. Repositório no GitHub (ex.: `Joaovvb/NoUploadVideo`)
+2. Cloudflare Dashboard → **Workers & Pages** → **Create** → aba **Pages** → **Connect to Git**
+3. Configuração do build:
+
+| Campo | Valor |
+|-------|--------|
+| Production branch | `main` |
+| Framework preset | `None` |
+| Build command | `npm install && npm run build` |
+| Build output directory | `dist/no-upload-video/browser` |
+
+4. Variável de ambiente (opcional mas recomendada):
+
+| Nome | Valor |
+|------|--------|
+| `NODE_VERSION` | `20` |
+
+5. **Save and Deploy** — o primeiro build pode levar 5–10 minutos (assets WASM).
+
+**Importante:** use o fluxo **Pages**, não **Workers** (`wrangler deploy` não se aplica a este projeto).
+
+**Limite de arquivo:** cada `ffmpeg-core.wasm` tem ~25 MB; o plano gratuito do Cloudflare limita arquivos estáticos a 25 MiB por arquivo — fique atento se o WASM crescer em versões futuras.
+
 ### Hospedagem estática
 
 Qualquer host de arquivos estáticos funciona (GitHub Pages, Cloudflare Pages, S3 + CloudFront, etc.), desde que os headers COOP/COEP estejam configurados.
@@ -1074,6 +1108,8 @@ npm test
 | Conversão muito lenta em AVI | Transcodificação completa necessária | Esperado; estratégias intermediárias ajudam quando possível |
 | Erro de memória | Arquivo muito grande / muitas abas | Reduzir tamanho ou fechar abas |
 | WebCodecs falha silenciosamente | Codec não suportado | Fallback automático para FFmpeg |
+| **Cloudflare: `npm ci` / lock file out of sync** | `package-lock.json` gerado com npm 11, build usa npm 10 | Rodar `npx npm@10.9.2 install`, commitar `package-lock.json` e push; ou definir `SKIP_DEPENDENCY_INSTALL=true` e build command `npm install && npm run build` |
+| **`ng.js` not found` após `npm ci` local** | `node_modules` corrompido | Apagar `node_modules`, `npx npm@10.9.2 install`, `npm start` |
 
 ### Verificar Cross-Origin Isolation
 
