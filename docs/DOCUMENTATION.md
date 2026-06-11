@@ -129,7 +129,7 @@ Conversor de vídeo 100% no navegador, sem upload para servidor. Todo o processa
 | Limpar concluídos | `clearCompleted()` | Botão “Clear completed” |
 | Contadores | `ConverterComponent` | “X queued”, “Y completed”, “Z downloaded” |
 | Lista com scroll | `converter.component` | `max-height: min(36vh, 300px)` |
-| Dica de scroll | UI | “Role a lista para ver todos” se > 4 itens |
+| Dica de scroll | UI | “Scroll the list to see all” se > 4 itens |
 | Exibir tamanho do arquivo | `FileSizePipe` | Na linha de cada item |
 | Ícone de vídeo por item | `ConversionQueueComponent` | SVG inline |
 | Destaque do item ativo | CSS `queue__item--active` | Durante processamento |
@@ -225,6 +225,9 @@ Conversor de vídeo 100% no navegador, sem upload para servidor. Todo o processa
 | Favicon / touch icon | `public/favicon.svg`, PNGs | Referenciados em `index.html` |
 | Headers COOP/COEP + segurança (prod) | `public/_headers` | COOP, COEP, CORP, `X-Content-Type-Options`, `Referrer-Policy` |
 | Redirect SPA (prod) | `public/_redirects` | Rotas Angular → `index.html` (evita 404 no F5) |
+| Redirect `.pages.dev` → `.com` | `functions/_middleware.js` | 301 no hostname `nouploadvideo.pages.dev` (Pages Function) |
+| Redirect `www` → apex | Cloudflare Redirect Rule | `(http.host eq "www.nouploadvideo.com")` → `nouploadvideo.com` |
+| Sitemap / robots | `public/sitemap.xml`, `robots.txt` | 5 URLs públicas; enviado no Google Search Console |
 | Headers COOP/COEP (dev) | `angular.json` | Habilita SharedArrayBuffer |
 | Prebundle exclude FFmpeg | `angular.json` | Evita quebra de workers no Vite |
 | `eventCoalescing` | `app.config.ts` | Otimização Zone.js |
@@ -300,11 +303,15 @@ O projeto segue separação em três camadas:
 NoUploadVideo/
 ├── angular.json                 # Configuração Angular (build, serve, test)
 ├── package.json
+├── functions/
+│   └── _middleware.js           # Redirect 301: nouploadvideo.pages.dev → .com
 ├── scripts/
 │   └── setup-ffmpeg-assets.mjs  # Copia/baixa assets WASM do FFmpeg
 ├── public/
 │   ├── _headers                 # COOP/COEP + headers de segurança (Cloudflare Pages)
 │   ├── _redirects               # SPA fallback (rotas Angular → index.html)
+│   ├── robots.txt               # Crawlers + URL do sitemap
+│   ├── sitemap.xml              # URLs públicas para SEO (nouploadvideo.com)
 │   ├── favicon.svg              # Ícone da aba (marca NoUploadVideo)
 │   ├── favicon-32.png
 │   ├── apple-touch-icon.png
@@ -751,6 +758,29 @@ Definidas em `app.routes.ts`:
 
 Todas as rotas usam **lazy loading** com `loadComponent`.
 
+### Sitemap e robots
+
+| Arquivo | URL em produção | Conteúdo |
+|---------|-----------------|----------|
+| `public/sitemap.xml` | https://nouploadvideo.com/sitemap.xml | `/video-converter`, `/avi-to-mp4`, `/mkv-to-mp4`, `/mov-to-mp4`, `/licenses` |
+| `public/robots.txt` | https://nouploadvideo.com/robots.txt | `Allow: /` + `Sitemap: https://nouploadvideo.com/sitemap.xml` |
+
+Ao adicionar uma nova rota pública, inclua a URL em `sitemap.xml`.
+
+### Google Search Console
+
+1. Propriedade tipo **Domínio**: `nouploadvideo.com` (validação DNS via Cloudflare)
+2. **Sitemaps** → enviar `sitemap.xml` (uma vez; o Google descobre todas as URLs do arquivo)
+3. Acompanhar **Indexação → Páginas** e **Desempenho** (resultados levam dias/semanas em sites novos)
+
+### URL canônica e redirects
+
+| Origem | Mecanismo | Destino |
+|--------|-----------|---------|
+| `www.nouploadvideo.com` | Redirect Rule na zona Cloudflare | `https://nouploadvideo.com` + path |
+| `nouploadvideo.pages.dev` | `functions/_middleware.js` | `https://nouploadvideo.com` + path |
+| `https://nouploadvideo.com` | — | URL oficial do site |
+
 ---
 
 ## 11. Configuração do projeto
@@ -1035,11 +1065,15 @@ dist/no-upload-video/browser/
 ├── favicon.svg
 ├── favicon-32.png
 ├── apple-touch-icon.png
+├── robots.txt
+├── sitemap.xml
 ├── main-*.js
 ├── worker-*.js          # ffmpeg.worker bundle
 ├── ffmpeg/              # ffmpeg-core.js (sem .wasm no deploy Cloudflare)
 └── ffmpeg-mt/           # ffmpeg-core.js + ffmpeg-core.worker.js
 ```
+
+A pasta `functions/` na raiz do repositório é implantada junto pelo Cloudflare Pages (middleware de redirect).
 
 ### Headers obrigatórios em produção
 
@@ -1121,7 +1155,20 @@ O projeto inclui `public/_headers` e `public/_redirects`, copiados automaticamen
 
 **Domínio customizado:** Workers & Pages → projeto `nouploadvideo` → **Custom domains** → `nouploadvideo.com` + `www.nouploadvideo.com`. Com domínio na mesma conta Cloudflare, use **Complete DNS setup** e aguarde status **Active**.
 
-**SSL recomendado (zone `nouploadvideo.com`):** SSL/TLS → **Always Use HTTPS: On**; redirect `www` → apex (ou vice-versa) via Redirect Rules.
+**SSL recomendado (zone `nouploadvideo.com`):** SSL/TLS → **Always Use HTTPS: On**; redirect `www` → apex via Redirect Rules.
+
+**Redirect `www` → apex (Redirect Rule):**
+
+| Campo | Valor |
+|-------|--------|
+| When | `(http.host eq "www.nouploadvideo.com")` |
+| Then (Dynamic) | `concat("https://nouploadvideo.com", http.request.uri.path)` |
+| Status | `301` |
+| Preserve query string | On |
+
+**Redirect `nouploadvideo.pages.dev` → `.com`:** `functions/_middleware.js` na raiz do repo (Pages Function; deploy automático com o Git).
+
+**SEO:** `public/sitemap.xml` e `public/robots.txt` — após deploy, enviar `sitemap.xml` no Google Search Console.
 
 **Limite de 25 MiB:** cada `ffmpeg-core.wasm` tem ~31 MiB — acima do limite do Cloudflare Pages. O projeto contorna isso carregando o **WASM via unpkg em runtime** (`ffmpeg-assets.constants.ts`); o build na Cloudflare define `CF_PAGES=1` e o `postinstall` **não** copia `.wasm` para `public/`. Apenas os `.js` (~centenas de KB) são publicados no deploy.
 
