@@ -1,0 +1,81 @@
+.ad-slot {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.ad-slot__frame {
+  width: 100%;
+  border: 1px dashed var(--ad-border, #cbd5e1);
+  border-radius: 12px;
+  background: var(--ad-bg, #f8fafc);
+  overflow: hidden;
+}
+
+.ad-slot__label {
+  display: block;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted, #94a3b8);
+  background: var(--surface-elevated, #fff);
+  border-bottom: 1px dashed var(--ad-border, #cbd5e1);
+  text-align: center;
+}
+
+.ad-slot__placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  color: var(--text-muted, #94a3b8);
+  text-align: center;
+}
+
+.ad-slot__size {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-subtle, #64748b);
+}
+
+.ad-slot__hint {
+  font-size: 0.6875rem;
+  max-width: 12rem;
+  line-height: 1.4;
+}
+
+.ad-slot--leaderboard .ad-slot__placeholder {
+  min-height: 90px;
+}
+
+.ad-slot--sidebar-left .ad-slot__placeholder {
+  min-height: 600px;
+}
+
+.ad-slot--sidebar-right .ad-slot__placeholder {
+  min-height: 250px;
+}
+
+.ad-slot--in-content .ad-slot__placeholder {
+  min-height: 280px;
+}
+
+.ad-slot--footer-banner .ad-slot__placeholder {
+  min-height: 90px;
+}
+
+.ad-slot--sidebar-left,
+.ad-slot--sidebar-right {
+  position: sticky;
+  top: 5.5rem;
+}
+
+@media (max-width: 1100px) {
+  .ad-slot--sidebar-left,
+  .ad-slot--sidebar-right {
+    display: none;
+  }
+}
