@@ -1,19 +1,24 @@
 import { CommonModule } from '@angular/common';
 import {
   Component,
+  computed,
   inject,
   input,
   model,
   OnInit,
+  signal,
 } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import {
   MAX_FILE_SIZE_BYTES,
   SUPPORTED_INPUT_EXTENSIONS,
 } from '../../core/constants/conversion.constants';
 import { ZIP_BATCH_SIZE } from '../../core/constants/download.constants';
+import { AudioTrimRange } from '../../core/models/audio-trim-range.model';
 import { OutputFormat } from '../../core/models/conversion-format.model';
 import { ConversionQueueService } from '../../core/services/conversion-queue.service';
 import { FfmpegService, getFileExtension } from '../../core/services/ffmpeg.service';
+import { AudioTrimEditorComponent } from '../../shared/components/audio-trim-editor/audio-trim-editor.component';
 import { ConversionQueueComponent } from '../../shared/components/conversion-queue/conversion-queue.component';
 import { FormatSelectorComponent } from '../../shared/components/format-selector/format-selector.component';
 import { UploadComponent } from '../../shared/components/upload/upload.component';
@@ -24,7 +29,9 @@ import { FileSizePipe } from '../../shared/pipes/file-size.pipe';
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     UploadComponent,
+    AudioTrimEditorComponent,
     ConversionQueueComponent,
     FormatSelectorComponent,
     FileSizePipe,
@@ -92,6 +99,34 @@ import { FileSizePipe } from '../../shared/pipes/file-size.pipe';
               [disabled]="queueService.isProcessing()"
               [(selectedFormat)]="selectedOutputFormat"
             />
+
+            @if (selectedOutputFormat() === 'mp3' && trimEditItem(); as trimItem) {
+              @if (queuedItems().length > 1) {
+                <div class="converter__trim-file-picker">
+                  <label class="converter__trim-file-label" for="trim-file-select">
+                    Trim settings for
+                  </label>
+                  <select
+                    id="trim-file-select"
+                    class="converter__trim-file-select"
+                    [disabled]="queueService.isProcessing()"
+                    [ngModel]="trimEditItemId()"
+                    (ngModelChange)="onTrimFileChange($event)"
+                  >
+                    @for (item of queuedItems(); track item.id) {
+                      <option [ngValue]="item.id">{{ item.file.name }}</option>
+                    }
+                  </select>
+                </div>
+              }
+
+              <app-audio-trim-editor
+                [file]="trimItem.file"
+                [disabled]="queueService.isProcessing()"
+                [trimRange]="trimItem.trimRange"
+                (trimRangeChange)="onTrimRangeChange(trimItem.id, $event)"
+              />
+            }
 
             <div class="converter__summary">
               @if (queueService.queuedCount() > 0) {
@@ -353,6 +388,27 @@ import { FileSizePipe } from '../../shared/pipes/file-size.pipe';
     .converter__btn--secondary:hover {
       background: var(--border-color, #e2e8f0);
     }
+
+    .converter__trim-file-picker {
+      display: flex;
+      flex-direction: column;
+      gap: 0.375rem;
+    }
+
+    .converter__trim-file-label {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--text, #0f172a);
+    }
+
+    .converter__trim-file-select {
+      padding: 0.5rem 0.75rem;
+      border: 1px solid var(--border-color, #cbd5e1);
+      border-radius: 8px;
+      font-size: 0.875rem;
+      background: var(--surface-elevated, #fff);
+      color: var(--text, #0f172a);
+    }
   `,
 })
 export class ConverterComponent implements OnInit {
@@ -369,6 +425,21 @@ export class ConverterComponent implements OnInit {
   readonly ZIP_BATCH_SIZE = ZIP_BATCH_SIZE;
   readonly selectedOutputFormat = model<OutputFormat>('mp4');
   readonly validationError = model<string | null>(null);
+  readonly trimEditItemId = signal<string | null>(null);
+
+  readonly queuedItems = computed(() =>
+    this.queueService.queueItems().filter((item) => item.status === 'queued'),
+  );
+
+  readonly trimEditItem = computed(() => {
+    const items = this.queuedItems();
+    if (items.length === 0) {
+      return null;
+    }
+
+    const selectedId = this.trimEditItemId();
+    return items.find((item) => item.id === selectedId) ?? items[0];
+  });
 
   ngOnInit(): void {
     this.selectedOutputFormat.set(this.defaultOutputFormat());
@@ -395,11 +466,21 @@ export class ConverterComponent implements OnInit {
 
     if (validFiles.length > 0) {
       this.queueService.addFiles(validFiles, this.selectedOutputFormat());
+      this.syncTrimEditItemId();
     }
+  }
+
+  onTrimFileChange(itemId: string): void {
+    this.trimEditItemId.set(itemId);
+  }
+
+  onTrimRangeChange(itemId: string, trimRange: AudioTrimRange | null): void {
+    this.queueService.setItemTrim(itemId, trimRange);
   }
 
   onRemoveItem(id: string): void {
     this.queueService.removeItem(id);
+    this.syncTrimEditItemId();
   }
 
   onClearCompleted(): void {
@@ -425,6 +506,20 @@ export class ConverterComponent implements OnInit {
   async onStartConversion(): Promise<void> {
     this.validationError.set(null);
     await this.queueService.processQueue(this.selectedOutputFormat());
+  }
+
+  private syncTrimEditItemId(): void {
+    const items = this.queuedItems();
+    const currentId = this.trimEditItemId();
+
+    if (items.length === 0) {
+      this.trimEditItemId.set(null);
+      return;
+    }
+
+    if (!currentId || !items.some((item) => item.id === currentId)) {
+      this.trimEditItemId.set(items[0].id);
+    }
   }
 
   private validateFile(file: File): string | null {

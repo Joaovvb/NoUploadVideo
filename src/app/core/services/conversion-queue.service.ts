@@ -1,6 +1,7 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { ZIP_BATCH_SIZE } from '../constants/download.constants';
+import { AudioTrimRange } from '../models/audio-trim-range.model';
 import { OutputFormat } from '../models/conversion-format.model';
 import { ConversionQueueItem } from '../models/conversion-queue-item.model';
 import { getQueueItemDownloadName } from '../utils/download-filename.util';
@@ -68,9 +69,19 @@ export class ConversionQueueService {
       outputData: null,
       errorMessage: null,
       downloaded: false,
+      trimRange: null,
     }));
 
     this.items.update((current) => [...current, ...newItems]);
+  }
+
+  setItemTrim(id: string, trimRange: AudioTrimRange | null): void {
+    const item = this.items().find((entry) => entry.id === id);
+    if (!item || item.status === 'processing') {
+      return;
+    }
+
+    this.patchItem(id, { trimRange });
   }
 
   removeItem(id: string): void {
@@ -189,7 +200,9 @@ export class ConversionQueueService {
     this.attachProgress(item.id);
 
     try {
-      const result = await this.ffmpegService.convert(item.file, item.outputFormat);
+      const trim =
+        item.outputFormat === 'mp3' && item.trimRange ? item.trimRange : undefined;
+      const result = await this.ffmpegService.convert(item.file, item.outputFormat, trim);
       this.patchItem(item.id, {
         status: 'completed',
         progress: 100,

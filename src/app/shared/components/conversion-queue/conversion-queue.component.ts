@@ -52,7 +52,12 @@ import { FileSizePipe } from '../../pipes/file-size.pipe';
                 </span>
               }
               @case ('queued') {
-                <span class="queue__status">Queued</span>
+                <span class="queue__status">
+                  Queued
+                  @if (item.outputFormat === 'mp3' && item.trimRange) {
+                    · Segment
+                  }
+                </span>
               }
               @case ('completed') {
                 <div class="queue__completed-actions">

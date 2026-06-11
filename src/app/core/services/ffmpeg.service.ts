@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { MIME_TYPES } from '../constants/conversion.constants';
+import { AudioTrimRange } from '../models/audio-trim-range.model';
 import { OutputFormat } from '../models/conversion-format.model';
 import { ConversionResult } from '../models/conversion-result.model';
 import { WebCodecsService } from './webcodecs.service';
@@ -39,7 +40,11 @@ export class FfmpegService {
    * Convert a local file to the target format and return a Blob URL for download.
    * Command equivalent: ffmpeg -i input.ext output.<format>
    */
-  async convert(file: File, outputFormat: OutputFormat): Promise<ConversionResult> {
+  async convert(
+    file: File,
+    outputFormat: OutputFormat,
+    trim?: AudioTrimRange,
+  ): Promise<ConversionResult> {
     const inputExt = getFileExtension(file.name);
 
     if (this.webCodecsService.canUseForConversion(inputExt, outputFormat)) {
@@ -59,6 +64,7 @@ export class FfmpegService {
         fileData,
         inputExt,
         outputFormat,
+        ...(trim ? { trim } : {}),
       }),
     );
 

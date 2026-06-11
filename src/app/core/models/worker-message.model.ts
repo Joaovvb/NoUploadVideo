@@ -1,3 +1,5 @@
+import { AudioTrimRange } from './audio-trim-range.model';
+
 /** Messages exchanged between main thread and FFmpeg Web Worker */
 export type WorkerMessageType =
   | 'init'
@@ -19,6 +21,7 @@ export interface ConvertPayload {
   fileData: ArrayBuffer;
   inputExt: string;
   outputFormat: string;
+  trim?: AudioTrimRange;
 }
 
 export interface WorkerOutboundMessage {

@@ -1,3 +1,4 @@
+import { AudioTrimRange } from './audio-trim-range.model';
 import { OutputFormat } from './conversion-format.model';
 
 export type ConversionQueueStatus =
@@ -20,4 +21,6 @@ export interface ConversionQueueItem {
   outputData: Uint8Array | null;
   errorMessage: string | null;
   downloaded: boolean;
+  /** Optional segment for MP3 extraction */
+  trimRange: AudioTrimRange | null;
 }

@@ -121,8 +121,13 @@ class StrategyFailedError extends Error {
   }
 }
 
-function runStrategies(inputName: string, outputName: string, outputFormat: string): void {
-  const strategies = buildConversionStrategies(inputName, outputName, outputFormat);
+function runStrategies(
+  inputName: string,
+  outputName: string,
+  outputFormat: string,
+  trim?: ConvertPayload['trim'],
+): void {
+  const strategies = buildConversionStrategies(inputName, outputName, outputFormat, trim);
 
   for (let index = 0; index < strategies.length; index++) {
     safeUnlink(outputName);
@@ -152,7 +157,7 @@ async function runConvert(payload: ConvertPayload): Promise<ArrayBuffer> {
   ffmpegCore.FS.writeFile(inputName, new Uint8Array(payload.fileData));
 
   postProgress(10, 'Starting conversion…');
-  runStrategies(inputName, outputName, payload.outputFormat);
+  runStrategies(inputName, outputName, payload.outputFormat, payload.trim);
 
   postProgress(98, 'Reading output file…');
   const outputData = ffmpegCore.FS.readFile(outputName);
