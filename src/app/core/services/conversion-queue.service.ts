@@ -218,7 +218,7 @@ export class ConversionQueueService {
     }
 
     throw new Error(
-      `Não foi possível ler "${item.file.name}". Limpe os concluídos, converta novamente e tente de novo.`,
+      `Could not read "${item.file.name}". Clear completed items, convert again, and retry.`,
     );
   }
 
@@ -247,7 +247,7 @@ export class ConversionQueueService {
 
     for (let index = 0; index < items.length; index++) {
       const item = items[index];
-      this.downloadAllStatus.set(`Salvando ${index + 1}/${items.length}…`);
+      this.downloadAllStatus.set(`Saving ${index + 1}/${items.length}…`);
 
       const data = this.resolveOutputData(item);
       const fileName = this.uniqueName(getQueueItemDownloadName(item), usedNames);
@@ -271,7 +271,7 @@ export class ConversionQueueService {
       this.downloadAllStatus.set(
         totalBatches > 1
           ? `ZIP ${batchIndex + 1}/${totalBatches}…`
-          : 'Preparando ZIP…',
+          : 'Preparing ZIP…',
       );
 
       const zip = new JSZip();
@@ -289,9 +289,9 @@ export class ConversionQueueService {
         compression: 'STORE',
       });
 
-      const suffix = totalBatches > 1 ? `-parte-${batchIndex + 1}-de-${totalBatches}` : '';
+      const suffix = totalBatches > 1 ? `-part-${batchIndex + 1}-of-${totalBatches}` : '';
       const zipUrl = URL.createObjectURL(zipBlob);
-      this.triggerDownload(zipUrl, `videos-convertidos-${timestamp}${suffix}.zip`);
+      this.triggerDownload(zipUrl, `converted-videos-${timestamp}${suffix}.zip`);
       URL.revokeObjectURL(zipUrl);
     }
   }

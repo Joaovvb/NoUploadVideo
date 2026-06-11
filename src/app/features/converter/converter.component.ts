@@ -73,10 +73,10 @@ import { FileSizePipe } from '../../shared/pipes/file-size.pipe';
         <div class="converter__panel">
           <div class="converter__queue-header">
             <span class="converter__queue-title">
-              {{ queueService.queueItems().length }} arquivo(s)
+              {{ queueService.queueItems().length }} file(s)
             </span>
             @if (queueService.queueItems().length > 4) {
-              <span class="converter__queue-hint">Role a lista para ver todos</span>
+              <span class="converter__queue-hint">Scroll the list to see all</span>
             }
           </div>
 
@@ -95,15 +95,15 @@ import { FileSizePipe } from '../../shared/pipes/file-size.pipe';
 
             <div class="converter__summary">
               @if (queueService.queuedCount() > 0) {
-                <span>{{ queueService.queuedCount() }} na fila</span>
+                <span>{{ queueService.queuedCount() }} queued</span>
               }
               @if (queueService.completedCount() > 0) {
-                <span>{{ queueService.completedCount() }} concluído(s)</span>
+                <span>{{ queueService.completedCount() }} completed</span>
               }
               @if (queueService.downloadedCount() > 0) {
-                <span>{{ queueService.downloadedCount() }} baixado(s)</span>
+                <span>{{ queueService.downloadedCount() }} downloaded</span>
               }
-              <span>Máx. {{ maxFileSize | fileSize }} por arquivo</span>
+              <span>Max {{ maxFileSize | fileSize }} per file</span>
             </div>
 
             <div class="converter__actions">
@@ -130,20 +130,20 @@ import { FileSizePipe } from '../../shared/pipes/file-size.pipe';
                   (click)="onDownloadAll()"
                 >
                   @if (queueService.isDownloadingAllZip()) {
-                    {{ queueService.downloadAllStatusText() ?? 'Salvando…' }}
+                    {{ queueService.downloadAllStatusText() ?? 'Saving…' }}
                   } @else if (queueService.supportsFolderSave) {
-                    Salvar todos em pasta ({{ queueService.completedCount() }})
+                    Save all to folder ({{ queueService.completedCount() }})
                   } @else {
-                    Baixar todos em ZIP ({{ queueService.completedCount() }})
+                    Download all as ZIP ({{ queueService.completedCount() }})
                   }
                 </button>
                 @if (queueService.supportsFolderSave) {
                   <p class="converter__zip-hint" role="note">
-                    Escolha uma pasta no computador — ideal para muitos vídeos grandes.
+                    Choose a folder on your computer — ideal for many large videos.
                   </p>
                 } @else if (queueService.completedCount() > ZIP_BATCH_SIZE) {
                   <p class="converter__zip-hint" role="note">
-                    Serão gerados vários ZIPs com até {{ ZIP_BATCH_SIZE }} vídeos cada.
+                    Multiple ZIP files will be created with up to {{ ZIP_BATCH_SIZE }} videos each.
                   </p>
                 }
               }
@@ -413,7 +413,7 @@ export class ConverterComponent implements OnInit {
       if (error instanceof DOMException && error.name === 'AbortError') {
         return;
       }
-      const message = error instanceof Error ? error.message : 'Falha ao salvar os vídeos';
+      const message = error instanceof Error ? error.message : 'Failed to save videos';
       this.validationError.set(message);
     }
   }

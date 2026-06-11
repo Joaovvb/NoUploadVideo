@@ -51,6 +51,7 @@ Conversor de vídeo 100% no navegador, sem upload para servidor. Todo o processa
 | Processamento | Web Worker dedicado (UI permanece responsiva) |
 | Limite de arquivo | 200 MB por arquivo |
 | Multi-arquivo | Fila sequencial com progresso individual |
+| Idioma da UI | Inglês (en) — `index.html` `lang="en"` |
 | Produção (exemplo) | https://nouploadvideo.pages.dev |
 
 ---
@@ -68,7 +69,7 @@ Conversor de vídeo 100% no navegador, sem upload para servidor. Todo o processa
 - Upload por **drag & drop** ou clique (múltiplos arquivos)
 - Seletor de formato de saída
 - **Fila de conversão** com barra de progresso, status textual, download individual e **salvar todos** (pasta no Chrome/Edge ou ZIPs em lotes)
-- Indicador **Baixado** por arquivo após download individual ou em lote
+- Indicador **Downloaded** por arquivo após download individual ou em lote
 - Badges informativos: privacidade, multi-thread FFmpeg, WebCodecs
 - **Modo escuro (dark mode)** com alternância no header e preferência salva no navegador
 - Layout de landing page com hero, features, CTA e slots de anúncio (placeholders)
@@ -117,10 +118,10 @@ Conversor de vídeo 100% no navegador, sem upload para servidor. Todo o processa
 | Progresso 0–100% | Fila + worker | Por arquivo ativo |
 | Status textual | `statusText` | Mensagens do worker (ex: “Copiando vídeo…”) |
 | Download individual | `ConversionQueueService.downloadItem()` | Botão com nome `arquivo.ext` correto |
-| Estado **Baixado** | `ConversionQueueItem.downloaded` | ✓ verde, “Baixado”, opção “Baixar novamente” |
+| Estado **Downloaded** | `ConversionQueueItem.downloaded` | ✓ verde, “Downloaded”, opção “Download again” |
 | Salvar todos em pasta | `downloadAllCompleted()` + File System Access API | Chrome/Edge: `showDirectoryPicker`, grava cada MP4 na pasta escolhida |
 | Baixar todos em ZIP (lotes) | `downloadAllCompleted()` + JSZip | Navegadores sem pasta: ZIPs de até `ZIP_BATCH_SIZE` (5) arquivos |
-| Progresso do lote | `downloadAllStatusText`, `isDownloadingAllZip` | Ex.: “Salvando 12/48…”, “ZIP 2/10…” |
+| Progresso do lote | `downloadAllStatusText`, `isDownloadingAllZip` | Ex.: “Saving 12/48…”, “ZIP 2/10…” |
 | Dados em memória | `outputData: Uint8Array` | Evita `fetch(blob:)` e erros de permissão em lotes grandes |
 | Remover da fila | Botão × | Bloqueado durante `processing` |
 | Limpar concluídos | `clearCompleted()` | Botão “Clear completed” |
@@ -205,7 +206,7 @@ Conversor de vídeo 100% no navegador, sem upload para servidor. Todo o processa
 | Funcionalidade | Onde | Detalhe |
 |----------------|------|---------|
 | Barra de progresso na fila | `ConversionQueueComponent` | `role="progressbar"`, `aria-valuenow` |
-| Tempo processado no status | `ffmpeg.worker.ts` | Ex: “Transcodificando… 45% (2:30)” |
+| Tempo processado no status | `ffmpeg.worker.ts` | Ex: “Transcoding… 45% (2:30)” |
 | Guard contra NaN | Worker + `WorkerService` | `Number.isFinite` |
 | `NgZone.run()` no progresso | `WorkerService` | Change detection no Angular |
 | `aria-live` / `aria-busy` | Vários componentes | Feedback para leitores de tela |
@@ -566,7 +567,7 @@ Estado da fila com Angular **signals**.
 
 | Status | Significado |
 |--------|-------------|
-| `queued` | Na fila |
+| `queued` | "Queued" |
 | `processing` | Convertendo agora |
 | `completed` | Pronto para download |
 | `error` | Falhou (mensagem em `errorMessage`) |
@@ -851,16 +852,16 @@ Versão fixa em código: **0.12.6** (`FFMPEG_CORE_VERSION`).
 - Com **File System Access API**, cada vídeo é gravado diretamente na pasta escolhida (ideal para dezenas de arquivos grandes)
 - Sem suporte a pasta, **JSZip** gera vários ZIPs (`videos-convertidos-YYYY-MM-DD-parte-X-de-Y.zip`) com até **5** vídeos cada (`ZIP_BATCH_SIZE`)
 - Itens convertidos **antes** de `outputData` existir precisam ser **reconvertidos** (Clear completed → converter de novo)
-- Após salvar (individual ou lote), o item exibe **Baixado** com destaque verde e permite **Baixar novamente**
+- Após salvar (individual ou lote), o item exibe **Downloaded** com destaque verde e permite **Download again**
 
 ### UI por status
 
 | Status | Exibição |
 |--------|----------|
-| `queued` | "Na fila" |
+| `queued` | "Queued" |
 | `processing` | Barra + `statusText` ou `%` |
 | `completed` (não baixado) | Botão "Download MP4" (etc.) |
-| `completed` + `downloaded` | "Baixado" + link "Baixar novamente" |
+| `completed` + `downloaded` | "Downloaded" + link "Download again" |
 | `error` | Mensagem de erro |
 
 ### Fluxo de download em lote
@@ -932,7 +933,7 @@ Durante transcodificação, o worker envia mensagens como:
 
 - `Remux rápido (sem re-encode)…`
 - `Copiando vídeo, convertendo áudio…`
-- `Transcodificando… 45% (2:30)`
+- `Transcoding… 45% (2:30)`
 
 O campo `time` do callback `setProgress` do FFmpeg indica segundos já processados do vídeo.
 

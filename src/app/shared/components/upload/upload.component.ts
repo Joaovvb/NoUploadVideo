@@ -44,7 +44,7 @@ import {
         <span class="upload-zone__icon" aria-hidden="true">{{ compact() ? '➕' : '⬆️' }}</span>
         <p class="upload-zone__title">
           @if (compact()) {
-            Adicionar mais vídeos
+            Add more videos
           } @else if (multiple()) {
             Drag & drop your videos here
           } @else {

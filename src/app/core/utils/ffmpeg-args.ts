@@ -36,22 +36,22 @@ export function buildConversionStrategies(
   if (outputFormat === 'mp4') {
     return [
       {
-        label: 'Remux rápido (sem re-encode)…',
+        label: 'Fast remux (no re-encode)…',
         tracksEncodeProgress: false,
         args: [...input, '-c', 'copy', ...MP4_FASTSTART, outputName],
       },
       {
-        label: 'Copiando vídeo, convertendo áudio…',
+        label: 'Copying video, converting audio…',
         tracksEncodeProgress: true,
         args: [...input, '-c:v', 'copy', ...FAST_AAC, ...MP4_FASTSTART, outputName],
       },
       {
-        label: 'Transcodificando vídeo (áudio original)…',
+        label: 'Transcoding video (original audio)…',
         tracksEncodeProgress: true,
         args: [...input, ...FAST_H264, '-c:a', 'copy', ...MP4_FASTSTART, outputName],
       },
       {
-        label: 'Transcodificando vídeo e áudio…',
+        label: 'Transcoding video and audio…',
         tracksEncodeProgress: true,
         args: [...input, ...FAST_H264, ...FAST_AAC, ...MP4_FASTSTART, outputName],
       },
@@ -61,12 +61,12 @@ export function buildConversionStrategies(
   if (outputFormat === 'avi' || outputFormat === 'mkv' || outputFormat === 'mov') {
     return [
       {
-        label: 'Remux rápido…',
+        label: 'Fast remux…',
         tracksEncodeProgress: false,
         args: [...input, '-c', 'copy', outputName],
       },
       {
-        label: 'Transcodificando com preset rápido…',
+        label: 'Transcoding with fast preset…',
         tracksEncodeProgress: true,
         args: [...input, ...FAST_H264, ...FAST_AAC, outputName],
       },
@@ -74,7 +74,7 @@ export function buildConversionStrategies(
   }
 
   return [{
-    label: 'Convertendo…',
+    label: 'Converting…',
     tracksEncodeProgress: true,
     args: [...input, outputName],
   }];

@@ -44,8 +44,8 @@ function bindProgressHandler(): void {
     const encodePercent = Math.round(ENCODE_PROGRESS_START + progress * (ENCODE_PROGRESS_END - ENCODE_PROGRESS_START));
     const timeLabel = formatSeconds(time);
     const status = timeLabel
-      ? `Transcodificando… ${Math.round(progress * 100)}% (${timeLabel})`
-      : `Transcodificando… ${Math.round(progress * 100)}%`;
+      ? `Transcoding… ${Math.round(progress * 100)}% (${timeLabel})`
+      : `Transcoding… ${Math.round(progress * 100)}%`;
 
     postProgress(encodePercent, status);
   });

@@ -52,21 +52,21 @@ import { FileSizePipe } from '../../pipes/file-size.pipe';
                 </span>
               }
               @case ('queued') {
-                <span class="queue__status">Na fila</span>
+                <span class="queue__status">Queued</span>
               }
               @case ('completed') {
                 <div class="queue__completed-actions">
                   @if (item.downloaded) {
                     <span class="queue__status queue__status--downloaded">
-                      Baixado
+                      Downloaded
                     </span>
                     <button
                       type="button"
                       class="queue__download-again"
-                      [attr.aria-label]="'Baixar novamente ' + item.file.name"
+                      [attr.aria-label]="'Download again ' + item.file.name"
                       (click)="onDownload(item)"
                     >
-                      Baixar novamente
+                      Download again
                     </button>
                   } @else {
                     <button
@@ -84,7 +84,7 @@ import { FileSizePipe } from '../../pipes/file-size.pipe';
                 <span class="queue__status queue__status--error">{{ item.errorMessage }}</span>
               }
               @case ('cancelled') {
-                <span class="queue__status">Cancelado</span>
+                <span class="queue__status">Cancelled</span>
               }
             }
           </div>

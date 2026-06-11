@@ -75,7 +75,7 @@ Se `false`, verifique os headers em `angular.json` → `serve.options.headers`.
 
 ### Commits
 
-Use mensagens descritivas em inglês ou português, focadas no propósito:
+Use mensagens descritivas em **inglês** (idioma da UI), focadas no propósito:
 
 ```
 feat: add webm output format support
@@ -176,7 +176,7 @@ if (outputFormat === 'flv') {
       args: [...input, '-c', 'copy', outputName],
     },
     {
-      label: 'Transcodificando com preset rápido…',
+      label: 'Transcoding with fast preset…',
       tracksEncodeProgress: true,
       args: [...input, ...FAST_H264, ...FAST_AAC, outputName],
     },
