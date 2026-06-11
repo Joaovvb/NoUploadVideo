@@ -120,9 +120,20 @@
 
 .app__footer-tagline {
   margin: 0;
-  max-width: 20rem;
+  max-width: 22rem;
   font-size: 0.875rem;
   line-height: 1.5;
+}
+
+.app__footer-ffmpeg {
+  color: var(--footer-text-bright, #fff);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.app__footer-ffmpeg:hover {
+  color: var(--primary, #818cf8);
 }
 
 .app__footer-nav {
@@ -149,6 +160,18 @@
   border-top: 1px solid var(--footer-border, rgb(255 255 255 / 8%));
   text-align: center;
   font-size: 0.75rem;
+}
+
+.app__footer-copy-link {
+  display: inline-block;
+  margin-left: 0.5rem;
+  color: var(--footer-text, #94a3b8);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.app__footer-copy-link:hover {
+  color: var(--footer-text-bright, #fff);
 }
 
 @media (max-width: 900px) {

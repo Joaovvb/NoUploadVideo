@@ -1,0 +1,118 @@
+.licenses {
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 4rem;
+}
+
+.licenses__title {
+  margin: 0 0 0.5rem;
+  font-size: clamp(1.75rem, 4vw, 2.25rem);
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+.licenses__lead {
+  margin: 0 0 2rem;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.licenses__section {
+  margin-bottom: 2.5rem;
+}
+
+.licenses__section-title {
+  margin: 0 0 0.75rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.licenses__section p {
+  margin: 0 0 1rem;
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: var(--text-muted);
+}
+
+.licenses__section a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.licenses__section a:hover {
+  color: var(--primary-dark);
+}
+
+.licenses__list {
+  margin: 0;
+  padding-left: 1.25rem;
+  color: var(--text-muted);
+  font-size: 0.9375rem;
+  line-height: 1.65;
+}
+
+.licenses__list li {
+  margin-bottom: 0.5rem;
+}
+
+.licenses__table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--surface-elevated);
+}
+
+.licenses__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.licenses__table th,
+.licenses__table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.licenses__table th {
+  font-weight: 600;
+  color: var(--text);
+  background: var(--surface);
+}
+
+.licenses__table tr:last-child td {
+  border-bottom: none;
+}
+
+.licenses__table td {
+  color: var(--text-muted);
+}
+
+.licenses__table a {
+  color: var(--primary);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.licenses__table a:hover {
+  text-decoration: underline;
+}
+
+.licenses__back {
+  display: inline-flex;
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.licenses__back:hover {
+  text-decoration: underline;
+}

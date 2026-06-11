@@ -33,6 +33,12 @@ export const routes: Routes = [
     title: 'MOV to MP4 Converter — NoUploadVideo',
   },
   {
+    path: 'licenses',
+    loadComponent: () =>
+      import('./features/pages/licenses/licenses.page').then((m) => m.LicensesPage),
+    title: 'Licenses & Open Source — NoUploadVideo',
+  },
+  {
     path: '**',
     redirectTo: 'video-converter',
   },

@@ -74,16 +74,29 @@ import { ThemeToggleComponent } from './shared/components/theme-toggle/theme-tog
         <div class="app__footer-inner">
           <div class="app__footer-brand">
             <span class="app__footer-name">NoUploadVideo</span>
-            <p class="app__footer-tagline">100% client-side video conversion powered by FFmpeg WebAssembly.</p>
+            <p class="app__footer-tagline">
+              100% client-side video conversion.
+              <a
+                href="https://ffmpeg.org"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="app__footer-ffmpeg"
+              >Powered by FFmpeg</a>
+              WebAssembly.
+            </p>
           </div>
           <nav class="app__footer-nav" aria-label="Footer navigation">
             <a routerLink="/video-converter">Video Converter</a>
             <a routerLink="/avi-to-mp4">AVI to MP4</a>
             <a routerLink="/mkv-to-mp4">MKV to MP4</a>
             <a routerLink="/mov-to-mp4">MOV to MP4</a>
+            <a routerLink="/licenses">Licenses</a>
           </nav>
         </div>
-        <p class="app__footer-copy">&copy; {{ currentYear }} NoUploadVideo. Your files never leave your browser.</p>
+        <p class="app__footer-copy">
+          &copy; {{ currentYear }} NoUploadVideo. Your files never leave your browser.
+          <a routerLink="/licenses" class="app__footer-copy-link">Open source licenses</a>
+        </p>
       </footer>
     </div>
   `,
