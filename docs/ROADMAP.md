@@ -148,7 +148,7 @@ flowchart LR
 
 | Item | Prioridade | Notas |
 |------|------------|--------|
-| Analytics (Plausible ou GA4) | Média | Tráfego e rotas mais usadas |
+| Analytics (Plausible) | ✅ | `AnalyticsService` — SPA pageviews em produção |
 | Mais rotas SEO (`webm-to-mp4`, `video-to-mp3`) | Média | Conforme demanda no Search Console |
 | Google AdSense | Baixa | Depois de tráfego + privacidade |
 | PWA / instalar app | Baixa | Nice to have |
@@ -178,7 +178,7 @@ Funcionalidades presentes no código mas sem fluxo ativo (ver [DOCUMENTATION.md 
 2. [ ] (Opcional) Inspeção de URL nas 4 páginas SEO
 3. [ ] Reenviar sitemap no Search Console (após deploy de /privacy)
 4. [x] Página de Privacy Policy (`/privacy`)
-5. [ ] Analytics leve (Plausible ou GA4)
+5. [x] Analytics leve (Plausible)
 6. [ ] AdSense ou novas rotas SEO conforme dados de tráfego
 ```
 

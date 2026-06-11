@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { AnalyticsService } from './core/services/analytics.service';
 import { ThemeToggleComponent } from './shared/components/theme-toggle/theme-toggle.component';
 
 @Component({
@@ -105,8 +106,14 @@ import { ThemeToggleComponent } from './shared/components/theme-toggle/theme-tog
   `,
   styleUrl: './app.component.scss',
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
+  private readonly analyticsService = inject(AnalyticsService);
+
   readonly currentYear = new Date().getFullYear();
+
+  ngOnInit(): void {
+    this.analyticsService.init();
+  }
 
   scrollToConverter(event: Event): void {
     const target = event.currentTarget as HTMLAnchorElement;

@@ -235,6 +235,7 @@ Conversor de vídeo 100% no navegador, sem upload para servidor. Todo o processa
 | Prebundle exclude FFmpeg | `angular.json` | Evita quebra de workers no Vite |
 | `eventCoalescing` | `app.config.ts` | Otimização Zone.js |
 | `withComponentInputBinding` | `app.config.ts` | Inputs via rota (preparado) |
+| Analytics (Plausible) | `AnalyticsService` | `script.manual.js` + pageview em cada `NavigationEnd`; só produção |
 
 ### 2.2 Reservado ou não utilizado
 
@@ -754,7 +755,7 @@ Página estática de política de privacidade em `/privacy`.
 | `localStorage` | Preferência de tema (`nouploadvideo-theme`) |
 | CDN | WASM FFmpeg via unpkg (sem conteúdo do usuário) |
 | Hosting | Cloudflare Pages — dados de conexão padrão |
-| Analytics / cookies | Não utilizados no momento; política prevê atualização futura |
+| Analytics | Plausible (`AnalyticsService`) — pageviews em produção, sem cookies |
 | Contacto | GitHub Issues do repositório |
 
 ---

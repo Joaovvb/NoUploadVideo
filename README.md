@@ -68,6 +68,8 @@ Headers COOP/COEP, segurança (`X-Content-Type-Options`, `Referrer-Policy`) e re
 
 **SEO:** `public/sitemap.xml` + `public/robots.txt` (enviar o sitemap no Google Search Console).
 
+**Analytics:** [Plausible](https://plausible.io) em produção (`analytics.constants.ts` → `nouploadvideo.com`). Crie o site no dashboard Plausible após o deploy.
+
 Arquivos WASM (~31 MiB) excedem o limite de 25 MiB do Cloudflare Pages e são carregados via CDN (unpkg) em runtime. Apenas os `.js` do FFmpeg vão no bundle de deploy.
 
 Use `npx npm@10.9.2 install` localmente para manter o `package-lock.json` compatível com o `npm ci` da Cloudflare.

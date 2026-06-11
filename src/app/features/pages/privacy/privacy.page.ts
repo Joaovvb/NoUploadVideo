@@ -22,7 +22,7 @@ import { Meta, Title } from '@angular/platform-browser';
           <li>Your video and audio files are processed <strong>only on your device</strong>.</li>
           <li>We do <strong>not</strong> upload your media to our servers for conversion.</li>
           <li>We do <strong>not</strong> require an account.</li>
-          <li>We do <strong>not</strong> use advertising or analytics trackers at this time.</li>
+          <li>We use <strong>privacy-friendly analytics</strong> (no advertising trackers).</li>
         </ul>
       </section>
 
@@ -75,12 +75,30 @@ import { Meta, Title } from '@angular/platform-browser';
         </p>
       </section>
 
+      <section class="privacy__section" aria-labelledby="analytics-heading">
+        <h2 id="analytics-heading" class="privacy__section-title">Website analytics</h2>
+        <p>
+          We use
+          <a href="https://plausible.io" target="_blank" rel="noopener noreferrer">Plausible Analytics</a>
+          to understand aggregate traffic (page views, referrers, countries, devices, and browsers).
+          Plausible is configured for this site without cookies and without collecting personal data
+          for advertising profiles. See the
+          <a href="https://plausible.io/privacy" target="_blank" rel="noopener noreferrer">Plausible privacy policy</a>
+          for how they process data.
+        </p>
+        <p>
+          Analytics requests go to Plausible&rsquo;s servers and may include your IP address in
+          truncated form, user agent, and the page URL you visit. They do <strong>not</strong>
+          receive your video files or conversion data.
+        </p>
+      </section>
+
       <section class="privacy__section" aria-labelledby="cookies-heading">
         <h2 id="cookies-heading" class="privacy__section-title">Cookies and similar technologies</h2>
         <p>
-          We do not set advertising or analytics cookies on this site at this time. If we add
-          analytics or advertising in the future, we will update this policy before or when those
-          services are enabled.
+          We do not use advertising cookies. Plausible Analytics on this site does not rely on
+          persistent tracking cookies. Theme preference is stored locally as described above. If we
+          add advertising in the future, we will update this policy first.
         </p>
       </section>
 
