@@ -183,10 +183,12 @@ Conversor de vídeo 100% no navegador, sem upload para servidor. Todo o processa
 | Footer global | `AppComponent` | Links, tagline, copyright dinâmico |
 | **Powered by FFmpeg** | `AppComponent` footer | Link para https://ffmpeg.org |
 | Link **Licenses** | Footer + copyright | Rota `/licenses` |
+| Link **Privacy** | Footer + copyright | Rota `/privacy` |
 | Página de licenças | `LicensesPage` | LGPL, tabela de dependências, disclaimer |
+| Política de privacidade | `PrivacyPage` | Processamento local, storage, CDN, hosting |
 | Favicon da marca | `public/favicon.svg` + PNG | Substitui ícone padrão do Angular |
 | Nav ativa | `RouterLinkActive` | Destaque na rota atual |
-| 4 páginas SEO + licenças | `features/pages/*` | Conversor geral + `/licenses` |
+| Páginas SEO + legal | `features/pages/*` | Conversor, rotas SEO, `/licenses`, `/privacy` |
 | Meta title/description | Cada page | Via `Title` e `Meta` Angular |
 | Lazy loading de rotas | `app.routes.ts` | `loadComponent` |
 | Fonte Inter | `index.html` | Google Fonts |
@@ -246,7 +248,7 @@ Funcionalidades presentes no código mas **sem fluxo ativo** ou **não integrada
 | Cancelar conversão em andamento | **Não implementado** | Não há botão nem abort no worker |
 | Pausar/retomar fila | **Não implementado** | Fila só avança sequencialmente |
 | Histórico persistente | **Não implementado** | Estado só em memória (signals) |
-| Política de privacidade | **Não implementado** | Recomendado antes de AdSense/analytics |
+| Política de privacidade | `/privacy` | Processamento local, localStorage, CDN, Cloudflare |
 | Testes dos componentes core | **Parcial** | `app.component.spec.ts` e `theme.service.spec.ts` |
 
 ---
@@ -742,6 +744,19 @@ Página estática de conformidade open source em `/licenses`.
 | Disclaimer | Uso “as is”; responsabilidade do usuário pelo conteúdo convertido |
 | Footer | Link “Back to converter” → `/video-converter` |
 
+### `PrivacyPage`
+
+Página estática de política de privacidade em `/privacy`.
+
+| Conteúdo | Detalhe |
+|----------|---------|
+| Processamento local | Vídeos não são enviados ao servidor |
+| `localStorage` | Preferência de tema (`nouploadvideo-theme`) |
+| CDN | WASM FFmpeg via unpkg (sem conteúdo do usuário) |
+| Hosting | Cloudflare Pages — dados de conexão padrão |
+| Analytics / cookies | Não utilizados no momento; política prevê atualização futura |
+| Contacto | GitHub Issues do repositório |
+
 ---
 
 ## 10. Rotas e SEO
@@ -756,6 +771,7 @@ Definidas em `app.routes.ts`:
 | `/mkv-to-mp4` | MkvToMp4Page | MKV to MP4 Converter |
 | `/mov-to-mp4` | MovToMp4Page | MOV to MP4 Converter |
 | `/licenses` | LicensesPage | Licenses & Open Source |
+| `/privacy` | PrivacyPage | Privacy Policy |
 | `**` | redirect → `/video-converter` | — |
 
 Todas as rotas usam **lazy loading** com `loadComponent`.
@@ -764,7 +780,7 @@ Todas as rotas usam **lazy loading** com `loadComponent`.
 
 | Arquivo | URL em produção | Conteúdo |
 |---------|-----------------|----------|
-| `public/sitemap.xml` | https://nouploadvideo.com/sitemap.xml | `/video-converter`, `/avi-to-mp4`, `/mkv-to-mp4`, `/mov-to-mp4`, `/licenses` |
+| `public/sitemap.xml` | https://nouploadvideo.com/sitemap.xml | `/video-converter`, rotas SEO, `/licenses`, `/privacy` |
 | `public/robots.txt` | https://nouploadvideo.com/robots.txt | `Allow: /` + `Sitemap: https://nouploadvideo.com/sitemap.xml` |
 
 Ao adicionar uma nova rota pública, inclua a URL em `sitemap.xml`.
@@ -1294,7 +1310,7 @@ NoUploadVideo usa software open source, em especial **FFmpeg** (LGPL). A página
 
 | Item | Status |
 |------|--------|
-| Política de privacidade | Não implementada (recomendada antes de analytics/AdSense) |
+| Política de privacidade | `/privacy` — processamento local, storage, CDN, hosting |
 | Termos de uso | Não implementados |
 | `LICENSE` na raiz do repo | Não há — o app é `"private": true` no `package.json`; atribuições estão em `/licenses` |
 

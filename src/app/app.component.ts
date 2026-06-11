@@ -91,10 +91,13 @@ import { ThemeToggleComponent } from './shared/components/theme-toggle/theme-tog
             <a routerLink="/mkv-to-mp4">MKV to MP4</a>
             <a routerLink="/mov-to-mp4">MOV to MP4</a>
             <a routerLink="/licenses">Licenses</a>
+            <a routerLink="/privacy">Privacy</a>
           </nav>
         </div>
         <p class="app__footer-copy">
           &copy; {{ currentYear }} NoUploadVideo. Your files never leave your browser.
+          <a routerLink="/privacy" class="app__footer-copy-link">Privacy Policy</a>
+          &middot;
           <a routerLink="/licenses" class="app__footer-copy-link">Open source licenses</a>
         </p>
       </footer>

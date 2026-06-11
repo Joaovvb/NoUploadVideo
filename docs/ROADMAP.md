@@ -52,7 +52,7 @@ flowchart LR
 | Domínio / redirects | ██████████ 100% | `.com`, `www`, `.pages.dev` |
 | SEO (configuração) | ██████████ 100% | Sitemap, robots, Search Console |
 | SEO (resultados) | ██░░░░░░░░ ~20% | Indexação leva dias/semanas |
-| Legal | ████░░░░░░ ~40% | LGPL ok; falta privacidade |
+| Legal | ████████░░ ~80% | LGPL + Privacy Policy; falta termos de uso |
 | Monetização | ░░░░░░░░░░ 0% | AdSense não iniciado |
 | Documentação | ██████████ 100% | DOCUMENTATION, ARCHITECTURE, CONTRIBUTING |
 
@@ -138,7 +138,7 @@ flowchart LR
 | Item | Status | Detalhe |
 |------|--------|---------|
 | Atribuição FFmpeg (LGPL) | ✅ | Footer + `/licenses` |
-| Política de privacidade | ⬜ | Necessária antes de ads/analytics |
+| Política de privacidade | ✅ | `/privacy` — inglês, footer + sitemap |
 | Termos de uso | ⬜ | Opcional, recomendado |
 | Cookie banner | ⬜ | Só se usar GA4 com cookies |
 
@@ -176,9 +176,10 @@ Funcionalidades presentes no código mas sem fluxo ativo (ver [DOCUMENTATION.md 
 ```
 1. [ ] Aguardar indexação no Search Console (passivo)
 2. [ ] (Opcional) Inspeção de URL nas 4 páginas SEO
-3. [ ] Analytics leve (Plausible ou GA4)
-4. [ ] Página de Privacy Policy
-5. [ ] AdSense ou novas rotas SEO conforme dados de tráfego
+3. [ ] Reenviar sitemap no Search Console (após deploy de /privacy)
+4. [x] Página de Privacy Policy (`/privacy`)
+5. [ ] Analytics leve (Plausible ou GA4)
+6. [ ] AdSense ou novas rotas SEO conforme dados de tráfego
 ```
 
 ---

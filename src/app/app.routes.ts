@@ -39,6 +39,12 @@ export const routes: Routes = [
     title: 'Licenses & Open Source — NoUploadVideo',
   },
   {
+    path: 'privacy',
+    loadComponent: () =>
+      import('./features/pages/privacy/privacy.page').then((m) => m.PrivacyPage),
+    title: 'Privacy Policy — NoUploadVideo',
+  },
+  {
     path: '**',
     redirectTo: 'video-converter',
   },
