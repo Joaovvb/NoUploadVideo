@@ -17,7 +17,7 @@ Conversor de vídeo 100% no navegador, sem upload para servidor. Todo o processa
 ## Índice
 
 1. [Visão geral](#1-visão-geral)
-2. [Funcionalidades](#2-funcionalidades) — [catálogo completo](#21-catálogo-completo-de-funcionalidades-implementadas)
+2. [Funcionalidades](#2-funcionalidades) — [catálogo completo](#21-catálogo-completo-de-funcionalidades-implementadas) · [fora de escopo](#23-fora-de-escopo)
 3. [Stack tecnológica](#3-stack-tecnológica)
 4. [Arquitetura](#4-arquitetura)
 5. [Estrutura de pastas](#5-estrutura-de-pastas)
@@ -78,6 +78,7 @@ Conversor de vídeo 100% no navegador, sem upload para servidor. Todo o processa
 - **Modo escuro (dark mode)** com alternância no header e preferência salva no navegador
 - Layout de landing page com hero, features, CTA e slots de anúncio (placeholders)
 - Páginas SEO dedicadas para conversões populares
+- **Feedback por e-mail** — `mailto:contact@nouploadvideo.com` (footer, pós-conversão, reporte de erro na fila)
 
 ### Performance
 
@@ -101,6 +102,8 @@ Conversor de vídeo 100% no navegador, sem upload para servidor. Todo o processa
 | Trim MP3 (segmento) | `ffmpeg-args.ts`, fila | `-ss` / `-to` quando trim ativo; arquivo inteiro se seleção cobrir ~100% |
 | Preview + waveform (trim) | `AudioWaveformTrimComponent` | Web Audio API + Canvas + `<audio>` blob; 100% local |
 | Editor de trim | `AudioTrimEditorComponent` | Visível só com saída **MP3**; lazy-load do preview |
+| Feedback (`mailto`) | `feedback-mailto.util.ts` | Links no footer, conversor e fila; sem backend |
+| Evento Plausible `feedback_click` | `AnalyticsService.trackEvent` | Props `source`: footer, converter_*, queue_error |
 | FFmpeg via Web Worker | `ffmpeg.worker.ts` | UI não bloqueia durante encode |
 | Lazy load do engine | `FfmpegService.init()` | WASM carregado na 1ª conversão |
 | Single-thread fallback | `WorkerService` | `.js` em `/ffmpeg/`; WASM via unpkg |
@@ -169,6 +172,20 @@ Conversor de vídeo 100% no navegador, sem upload para servidor. Todo o processa
 | Resumo de limite | UI | “Máx. 200.0 MB por arquivo” |
 | Editor trim MP3 | `AudioTrimEditorComponent` | Aparece quando formato de saída é `mp3` |
 | Indicador “Segment” na fila | `ConversionQueueComponent` | Quando item tem `trimRange` válido |
+| Report issue (erro na fila) | `ConversionQueueComponent` | `mailto` com contexto do item (`errorMessage`, formato, tamanho) |
+| Prompt pós-conversão | `ConverterComponent` | “Did everything work?” após `completed` sem `queued` |
+
+#### Feedback do usuário
+
+| Ponto na UI | Texto | Detalhe |
+|-------------|-------|---------|
+| Footer global | **Send feedback** | `buildFeedbackMailtoUrl('general')` |
+| Conversor (fila concluída) | Share a quick thanks / Send feedback | `general` e `positive`; só quando não há itens `queued` |
+| Item com `error` na fila | **Report issue** | Assunto inclui nome do arquivo; corpo com erro e browser |
+
+**E-mail:** `contact@nouploadvideo.com` (`contact.constants.ts`).
+
+**Privacidade:** o usuário envia **voluntariamente** pelo cliente de e-mail dele; **não** anexar vídeos (o app não envia arquivos). User-Agent pode ir no corpo para diagnóstico.
 
 #### Trim MP3 (áudio)
 
@@ -274,6 +291,24 @@ Funcionalidades presentes no código mas **sem fluxo ativo** ou **não integrada
 | Política de privacidade | `/privacy` | Processamento local, localStorage, CDN, Cloudflare |
 | Testes dos componentes core | **Parcial** | `app.component.spec.ts` e `theme.service.spec.ts` |
 
+### 2.3 Fora de escopo
+
+Funcionalidades **deliberadamente não planejadas** — não são backlog; decisão de produto e conformidade.
+
+| Item | Status | Motivo resumido |
+|------|--------|-----------------|
+| Download / extração de **YouTube** (colar URL) | **Fora de escopo** | ToS do YouTube; risco legal (DMCA); streams protegidos; incompatível com “100% local” sem backend |
+| Downloader genérico por URL (TikTok, Instagram, etc.) | **Fora de escopo** | Mesmos problemas: CORS no browser, proxy servidor, manutenção, abuso e política de privacidade |
+| Backend proxy para buscar vídeos remotos | **Fora de escopo** | Contradiz deploy estático, marca “no upload” e `/privacy` (processamento só no dispositivo) |
+
+**O que o app faz:** o usuário **já possui** o arquivo (drag & drop ou seletor) e converte/extrai/trim localmente via FFmpeg WASM.
+
+**Alternativa legítima para o usuário:** obter o arquivo por meios que ele tenha direito de usar (exportação do editor, download oficial quando oferecido pela plataforma, arquivo próprio) e então usar o NoUploadVideo.
+
+**Exceção teórica (não planejada):** URL direta para um `.mp4` público com CORS liberado — ainda exigiria fetch no browser ou proxy; não é o caso do YouTube e não está no roadmap.
+
+Detalhes técnicos e legais: [§21 — Por que não suportar YouTube ou URLs?](#por-que-não-suportar-youtube-ou-download-por-url)
+
 ---
 
 ## 3. Stack tecnológica
@@ -363,6 +398,7 @@ NoUploadVideo/
         ├── app.routes.ts        # Rotas lazy-loaded
         ├── core/
         │   ├── constants/
+        │   │   ├── contact.constants.ts
         │   │   ├── conversion.constants.ts
         │   │   ├── ffmpeg-assets.constants.ts
         │   │   └── open-source-licenses.constants.ts
@@ -381,6 +417,7 @@ NoUploadVideo/
         │   ├── utils/
         │   │   ├── audio-trim-range.util.ts
         │   │   ├── audio-waveform.util.ts
+        │   │   ├── feedback-mailto.util.ts
         │   │   ├── ffmpeg-args.ts
         │   │   ├── format-time.util.ts
         │   │   └── download-filename.util.ts
@@ -824,6 +861,7 @@ Página estática de política de privacidade em `/privacy`.
 | Hosting | Cloudflare Pages — dados de conexão padrão |
 | Analytics | Plausible (`analytics.constants.ts` + `AnalyticsService`) — sem cookies |
 | Contacto | `contact@nouploadvideo.com` (Cloudflare Email Routing) + GitHub Issues |
+| Feedback voluntário | Links `mailto` no site | Texto livre no e-mail do usuário; sem upload de vídeo pelo app |
 
 ---
 
@@ -1063,6 +1101,19 @@ O campo `time` do callback `setProgress` do FFmpeg indica segundos já processad
 | Multi-thread FFmpeg · faster encoding | `WorkerService.isMultithreaded()` |
 | WebCodecs · hardware acceleration available | `WebCodecsService.isSupported()` |
 
+### Feedback do usuário (e-mail)
+
+Links `mailto:` abrem o cliente de e-mail do usuário — **não há API no servidor**.
+
+| Origem (`source` no Plausible) | Quando aparece |
+|--------------------------------|----------------|
+| `footer` | Link **Send feedback** no rodapé |
+| `converter_positive` | **Share a quick thanks** após conversão |
+| `converter_general` | **Send feedback** no painel do conversor |
+| `queue_error` | **Report issue** em item com status `error` |
+
+Utilitários: `buildFeedbackMailtoUrl()`, `buildIssueReportMailtoUrl()` em `feedback-mailto.util.ts`.
+
 ---
 
 ## 16. Limitações e performance
@@ -1080,6 +1131,7 @@ O campo `time` do callback `setProgress` do FFmpeg indica segundos já processad
 | Waveform (trim MP3) | `decodeAudioData` no main thread; arquivos grandes podem demorar segundos |
 | Preview vs MP3 final | Preview usa `<audio>` no container original; resultado vem do FFmpeg |
 | Waveform em alguns formatos | `decodeAudioData` pode falhar (ex.: codec raro); sliders de fallback |
+| URLs (YouTube, etc.) | **Não suportado** — app aceita apenas `File` local; ver [§2.3](#23-fora-de-escopo) |
 
 ### Por que parece "rápido até 12% e depois lento"?
 
@@ -1279,6 +1331,7 @@ Qualquer host de arquivos estáticos funciona (GitHub Pages, Cloudflare Pages, S
   - `src/app/core/services/theme.service.spec.ts` (toggle, persistência, `data-theme`)
   - `src/app/core/utils/ffmpeg-args.spec.ts` (args de trim MP3 `-ss`/`-to`)
   - `src/app/core/utils/audio-waveform.util.spec.ts` (rejeição de dados inválidos)
+  - `src/app/core/utils/feedback-mailto.util.spec.ts` (URLs `mailto` de feedback e issue)
 - Maioria dos componentes/serviços ainda sem specs dedicados (incl. `AudioWaveformTrimComponent`)
 
 ### Padrão recomendado (conforme regras do projeto)
@@ -1311,6 +1364,7 @@ npm test
 | Página trava ao escolher MP3 | Blob URL recriado em loop no `effect` | Preview lazy + `areTrimRangesEqual` |
 | “Generating waveform…” longo | Arquivo grande em RAM | Normal; melhoria futura: Worker (ver ROADMAP) |
 | Waveform indisponível | `decodeAudioData` falhou | Usar sliders de fallback; conversão FFmpeg segue ok |
+| “Posso colar link do YouTube?” | Fora de escopo por design | Use um arquivo que você já tenha no dispositivo; ver [§2.3](#23-fora-de-escopo) |
 | Conversão muito lenta em AVI | Transcodificação completa necessária | Esperado; estratégias intermediárias ajudam quando possível |
 | Erro de memória | Arquivo muito grande / muitas abas | Reduzir tamanho ou fechar abas |
 | WebCodecs falha silenciosamente | Codec não suportado | Fallback automático para FFmpeg |
@@ -1371,6 +1425,33 @@ Equilíbrio entre usabilidade e limites práticos de memória do browser para WA
 ### Por que trim só na saída MP3?
 
 MP3 é extração de áudio; o trim temporal (`-ss`/`-to`) é natural nesse fluxo. Estender trim a vídeo exigiria UX e args FFmpeg adicionais.
+
+### Por que não suportar YouTube ou download por URL?
+
+**Escopo do produto:** conversor de arquivos que o usuário **já tem** no dispositivo — não um “YouTube downloader”.
+
+| Dimensão | YouTube / URL de plataforma | NoUploadVideo (atual) |
+|----------|----------------------------|------------------------|
+| Entrada | Link remoto | `File` local (drag & drop) |
+| Onde o vídeo é obtido | Servidores Google/CDN, APIs ofuscadas | Disco do usuário |
+| Processamento | Precisaria baixar antes (proxy ou extensão) | FFmpeg WASM no browser |
+| Infra | Backend, fila, anti-abuso, IPs bloqueados | Cloudflare Pages estático |
+| Privacidade | URL e conteúdo passam pelo serviço de download | Arquivo não sai do browser |
+| ToS / legal | [YouTube ToS](https://www.youtube.com/t/terms) restringe download não autorizado | Conversão de arquivo do próprio usuário |
+
+**Por que não funciona só no browser:**
+
+1. **CORS** — o site não pode fazer `fetch` direto aos endpoints de mídia do YouTube.
+2. **DASH/HLS** — o vídeo não é um único `.mp4`; são manifestos e fragmentos.
+3. **Cipher / assinaturas** — mudam com frequência; ferramentas como yt-dlp exigem manutenção contínua em runtime server-side, não em WASM.
+4. **FFmpeg WASM** — opera sobre bytes já carregados; não resolve obtenção do YouTube.
+
+**Por que não adotamos backend (yt-dlp, proxy):**
+
+- Viaria outro produto (downloader), com custo, responsabilidade de conteúdo e conflito com a mensagem “Processing locally — no upload”.
+- Risco de DMCA, denúncias de abuso na Cloudflare e impacto em monetização futura (AdSense).
+
+**Decisão:** manter **fora de escopo** até revisão explícita de produto e assessoria legal. Ver também [ROADMAP.md — Fora de escopo](ROADMAP.md#fora-de-escopo).
 
 ---
 

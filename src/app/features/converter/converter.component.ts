@@ -18,7 +18,9 @@ import { ZIP_BATCH_SIZE } from '../../core/constants/download.constants';
 import { AudioTrimRange } from '../../core/models/audio-trim-range.model';
 import { OutputFormat } from '../../core/models/conversion-format.model';
 import { ConversionQueueService } from '../../core/services/conversion-queue.service';
+import { AnalyticsService } from '../../core/services/analytics.service';
 import { FfmpegService, getFileExtension } from '../../core/services/ffmpeg.service';
+import { buildFeedbackMailtoUrl } from '../../core/utils/feedback-mailto.util';
 import { AudioTrimEditorComponent } from '../../shared/components/audio-trim-editor/audio-trim-editor.component';
 import { ConversionQueueComponent } from '../../shared/components/conversion-queue/conversion-queue.component';
 import { FormatSelectorComponent } from '../../shared/components/format-selector/format-selector.component';
@@ -194,6 +196,27 @@ import { FileSizePipe } from '../../shared/pipes/file-size.pipe';
                 </button>
               }
             </div>
+
+            @if (showFeedbackPrompt()) {
+              <p class="converter__feedback" role="note">
+                Did everything work?
+                <a
+                  class="converter__feedback-link"
+                  [href]="positiveFeedbackMailtoUrl"
+                  (click)="onFeedbackClick('positive')"
+                >
+                  Share a quick thanks
+                </a>
+                <span class="converter__feedback-sep" aria-hidden="true">·</span>
+                <a
+                  class="converter__feedback-link"
+                  [href]="feedbackMailtoUrl"
+                  (click)="onFeedbackClick('general')"
+                >
+                  Send feedback
+                </a>
+              </p>
+            }
           </div>
         </div>
       }
@@ -410,6 +433,30 @@ import { FileSizePipe } from '../../shared/pipes/file-size.pipe';
       background: var(--surface-elevated, #fff);
       color: var(--text, #0f172a);
     }
+
+    .converter__feedback {
+      margin: 0.75rem 0 0;
+      padding-top: 0.75rem;
+      border-top: 1px solid var(--border-color, #e2e8f0);
+      font-size: 0.8125rem;
+      color: var(--text-muted, #64748b);
+      text-align: center;
+    }
+
+    .converter__feedback-link {
+      font-weight: 600;
+      color: var(--primary, #6366f1);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    .converter__feedback-link:hover {
+      color: var(--primary-dark, #4f46e5);
+    }
+
+    .converter__feedback-sep {
+      margin: 0 0.375rem;
+    }
   `,
 })
 export class ConverterComponent implements OnInit {
@@ -421,6 +468,7 @@ export class ConverterComponent implements OnInit {
 
   readonly ffmpegService = inject(FfmpegService);
   readonly queueService = inject(ConversionQueueService);
+  private readonly analyticsService = inject(AnalyticsService);
 
   readonly maxFileSize = MAX_FILE_SIZE_BYTES;
   readonly ZIP_BATCH_SIZE = ZIP_BATCH_SIZE;
@@ -441,6 +489,16 @@ export class ConverterComponent implements OnInit {
     const selectedId = this.trimEditItemId();
     return items.find((item) => item.id === selectedId) ?? items[0];
   });
+
+  readonly showFeedbackPrompt = computed(
+    () =>
+      this.queueService.completedCount() > 0 &&
+      this.queueService.queuedCount() === 0 &&
+      !this.queueService.isProcessing(),
+  );
+
+  readonly feedbackMailtoUrl = buildFeedbackMailtoUrl('general');
+  readonly positiveFeedbackMailtoUrl = buildFeedbackMailtoUrl('positive');
 
   private readonly syncTrimTargetOnMp3 = effect(() => {
     if (this.selectedOutputFormat() === 'mp3') {
@@ -479,6 +537,12 @@ export class ConverterComponent implements OnInit {
 
   onTrimFileChange(itemId: string): void {
     this.trimEditItemId.set(itemId);
+  }
+
+  onFeedbackClick(kind: 'general' | 'positive'): void {
+    this.analyticsService.trackEvent('feedback_click', {
+      source: kind === 'positive' ? 'converter_positive' : 'converter_general',
+    });
   }
 
   onTrimRangeChange(itemId: string, trimRange: AudioTrimRange | null): void {

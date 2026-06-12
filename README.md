@@ -16,6 +16,7 @@ Conversor de vídeo no navegador com **FFmpeg WebAssembly**. Processamento 100% 
 - Página de licenças: `/licenses` (FFmpeg LGPL + dependências open source)
 - Modo escuro com preferência salva no navegador
 - Limite de **200 MB** por arquivo
+- **Feedback** por e-mail (`contact@nouploadvideo.com`) — footer, após conversão e reporte de erro na fila
 
 **Site em produção:** https://nouploadvideo.com ([alternativo](https://nouploadvideo.pages.dev))
 

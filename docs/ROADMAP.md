@@ -79,6 +79,7 @@ flowchart LR
 | **Trim MP3 (segmento opcional)** | ✅ | Waveform + preview do trecho + FFmpeg `-ss`/`-to` |
 | Editor de waveform | ✅ | `AudioWaveformTrimComponent` — play só da seleção |
 | Fallback sliders (waveform) | ✅ | Se `decodeAudioData` falhar no browser |
+| Feedback por e-mail | ✅ | Footer, pós-conversão, **Report issue** na fila; `contact@nouploadvideo.com` |
 
 ---
 
@@ -187,6 +188,21 @@ Funcionalidades presentes no código mas sem fluxo ativo (ver [DOCUMENTATION.md 
 
 ---
 
+## Fora de escopo
+
+Decisão explícita — **não** entram no backlog como “pendentes”; só mudam com revisão de produto + aspectos legais.
+
+| Funcionalidade | Status | Por quê |
+|----------------|--------|---------|
+| **Extrair / baixar vídeo do YouTube** (colar URL) | ❌ Não planejado | ToS do YouTube; DMCA; streams protegidos; não roda de forma confiável só com WASM no browser |
+| Downloader por URL (TikTok, Instagram, etc.) | ❌ Não planejado | CORS, proxy servidor, abuso, manutenção constante |
+| Backend proxy (yt-dlp, etc.) | ❌ Não planejado | Contradiz deploy estático, privacidade (“local only”) e `/privacy` |
+
+**Fluxo suportado:** usuário traz o **arquivo** → converte / MP3 / trim com waveform → download local.
+
+Referência completa: [DOCUMENTATION.md §2.3 e §21](DOCUMENTATION.md#23-fora-de-escopo).
+
+---
 
 ## Próximos passos sugeridos
 
@@ -221,6 +237,7 @@ Funcionalidades presentes no código mas sem fluxo ativo (ver [DOCUMENTATION.md 
 | `6dd0192` | Trim MP3 opcional (MVP com preview) |
 | `1dc9ad5` | Fix freeze ao selecionar MP3 / blob URL |
 | — | Waveform trim (canvas + play do segmento) — ver docs § trim MP3 |
+| — | Feedback `mailto` + Plausible `feedback_click` |
 
 ---
 
@@ -232,6 +249,7 @@ Funcionalidades presentes no código mas sem fluxo ativo (ver [DOCUMENTATION.md 
 | ⏳ | Em andamento / aguardando tempo externo |
 | ⬜ | Não iniciado |
 | ⚠️ | Parcial |
+| ❌ | Fora de escopo (decisão explícita) |
 
 ---
 

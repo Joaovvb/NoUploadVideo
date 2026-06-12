@@ -3,7 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs';
 import { PLAUSIBLE_DOMAIN, PLAUSIBLE_SCRIPT_URL } from '../constants/analytics.constants';
-import { PlausibleFn } from '../models/plausible.model';
+import { PlausibleEvent, PlausibleFn } from '../models/plausible.model';
 import '../models/plausible.model';
 
 @Injectable({ providedIn: 'root' })
@@ -29,6 +29,14 @@ export class AnalyticsService {
 
   isEnabled(): boolean {
     return !isDevMode() && PLAUSIBLE_SCRIPT_URL.length > 0;
+  }
+
+  trackEvent(event: PlausibleEvent, props?: Record<string, string>): void {
+    if (!this.isEnabled()) {
+      return;
+    }
+
+    window.plausible?.(event, props ? { props } : undefined);
   }
 
   private loadScript(): void {

@@ -135,6 +135,13 @@ import { Meta, Title } from '@angular/platform-browser';
           <a href="mailto:contact@nouploadvideo.com">contact&#64;nouploadvideo.com</a>
         </p>
         <p>
+          Optional feedback links on the site (for example in the footer or after a conversion)
+          open your email app with a pre-filled message to
+          <a href="mailto:contact@nouploadvideo.com">contact&#64;nouploadvideo.com</a>.
+          We only receive what you choose to send in that email (such as a short description or
+          browser details). Do not attach video files — conversion stays on your device.
+        </p>
+        <p>
           You can also open an issue on
           <a
             href="https://github.com/Joaovvb/NoUploadVideo/issues"
@@ -154,7 +161,7 @@ export class PrivacyPage implements OnInit {
   private readonly title = inject(Title);
   private readonly meta = inject(Meta);
 
-  readonly lastUpdated = 'June 11, 2026';
+  readonly lastUpdated = 'June 12, 2026';
 
   ngOnInit(): void {
     this.title.setTitle('Privacy Policy — NoUploadVideo');

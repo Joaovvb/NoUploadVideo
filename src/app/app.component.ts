@@ -1,5 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { buildFeedbackMailtoUrl } from './core/utils/feedback-mailto.util';
 import { AnalyticsService } from './core/services/analytics.service';
 import { ThemeToggleComponent } from './shared/components/theme-toggle/theme-toggle.component';
 
@@ -93,6 +94,7 @@ import { ThemeToggleComponent } from './shared/components/theme-toggle/theme-tog
             <a routerLink="/mov-to-mp4">MOV to MP4</a>
             <a routerLink="/licenses">Licenses</a>
             <a routerLink="/privacy">Privacy</a>
+            <a [href]="feedbackMailtoUrl" (click)="onFeedbackLinkClick('footer')">Send feedback</a>
           </nav>
         </div>
         <p class="app__footer-copy">
@@ -110,9 +112,14 @@ export class AppComponent implements OnInit {
   private readonly analyticsService = inject(AnalyticsService);
 
   readonly currentYear = new Date().getFullYear();
+  readonly feedbackMailtoUrl = buildFeedbackMailtoUrl('general');
 
   ngOnInit(): void {
     this.analyticsService.init();
+  }
+
+  onFeedbackLinkClick(source: string): void {
+    this.analyticsService.trackEvent('feedback_click', { source });
   }
 
   scrollToConverter(event: Event): void {

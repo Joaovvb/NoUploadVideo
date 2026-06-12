@@ -1,4 +1,4 @@
-export type PlausibleEvent = 'pageview';
+export type PlausibleEvent = 'pageview' | 'feedback_click';
 
 export interface PlausibleFn {
   (event: PlausibleEvent, options?: { props?: Record<string, string> }): void;

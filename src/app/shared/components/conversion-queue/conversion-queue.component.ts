@@ -1,14 +1,17 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, input, output } from '@angular/core';
 import { ConversionQueueItem } from '../../../core/models/conversion-queue-item.model';
+import { AnalyticsService } from '../../../core/services/analytics.service';
 import { ConversionQueueService } from '../../../core/services/conversion-queue.service';
 import { getQueueItemDownloadName } from '../../../core/utils/download-filename.util';
+import { buildIssueReportMailtoUrl } from '../../../core/utils/feedback-mailto.util';
 import { FileSizePipe } from '../../pipes/file-size.pipe';
 
 @Component({
   selector: 'app-conversion-queue',
   standalone: true,
   imports: [CommonModule, FileSizePipe],
+  providers: [FileSizePipe],
   template: `
     <ul class="queue" role="list" aria-label="Conversion queue">
       @for (item of items(); track item.id) {
@@ -86,7 +89,16 @@ import { FileSizePipe } from '../../pipes/file-size.pipe';
                 </div>
               }
               @case ('error') {
-                <span class="queue__status queue__status--error">{{ item.errorMessage }}</span>
+                <div class="queue__error-actions">
+                  <span class="queue__status queue__status--error">{{ item.errorMessage }}</span>
+                  <a
+                    class="queue__report-issue"
+                    [href]="issueReportHref(item)"
+                    (click)="onReportIssueClick()"
+                  >
+                    Report issue
+                  </a>
+                </div>
               }
               @case ('cancelled') {
                 <span class="queue__status">Cancelled</span>
@@ -113,6 +125,8 @@ import { FileSizePipe } from '../../pipes/file-size.pipe';
 })
 export class ConversionQueueComponent {
   private readonly queueService = inject(ConversionQueueService);
+  private readonly analyticsService = inject(AnalyticsService);
+  private readonly fileSizePipe = inject(FileSizePipe);
 
   readonly items = input<ConversionQueueItem[]>([]);
   readonly removeItem = output<string>();
@@ -123,5 +137,19 @@ export class ConversionQueueComponent {
 
   onDownload(item: ConversionQueueItem): void {
     this.queueService.downloadItem(item);
+  }
+
+  issueReportHref(item: ConversionQueueItem): string {
+    return buildIssueReportMailtoUrl({
+      fileName: item.file.name,
+      outputFormat: item.outputFormat,
+      errorMessage: item.errorMessage ?? 'Unknown error',
+      fileSizeLabel: this.fileSizePipe.transform(item.file.size),
+      hadTrimSegment: item.outputFormat === 'mp3' && !!item.trimRange,
+    });
+  }
+
+  onReportIssueClick(): void {
+    this.analyticsService.trackEvent('feedback_click', { source: 'queue_error' });
   }
 }
